@@ -12,32 +12,30 @@
 1. **Clone and setup the project:**
    ```bash
    git clone <your-repo-url>
-   cd clavel_assignment
+   cd templater
    ```
 
-2. **Start MongoDB:**
-   ```bash
-   # If using local MongoDB
-   mongod
-   
-   # Or use MongoDB Atlas (cloud)
-   # Update the MONGODB_URL in backend/.env
-   ```
-
-3. **Start the Backend:**
+   **Backend Setup**
    ```bash
    cd backend
+   cp .env.example .env # copy .env.example to .env and update your environment variables
+   python -m venv venv # create virtual environment
    source venv/bin/activate
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   pip install --upgrade pip # upgrade pip
+   pip install -r requirements.txt # install dependencies
+   uvicorn app.main:app --reload # starts the backend server at port 8000
    ```
-
-4. **Start the Frontend:**
+   **Frontend Setup**
    ```bash
    cd frontend
-   npm run dev
+   npm install # install dependencies
+   npm run dev # starts the frontend server in development mode at port 3000
+   # to start in production first stop development server then run
+   npm run build # build production assets
+   npm run start # start production server
    ```
 
-5. **Access the Application:**
+2. **Access the Application:**
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:8000
    - API Documentation: http://localhost:8000/docs
@@ -83,7 +81,7 @@ All these actions will trigger the payment redirect.
 
 ### Backend (.env)
 ```env
-MONGODB_URL=mongodb://localhost:27017/clavel_app
+MONGODB_URL=your_mongodb_url
 JWT_SECRET_KEY=your-super-secret-jwt-key
 JWT_REFRESH_SECRET_KEY=your-super-secret-refresh-key
 EMAIL_HOST=smtp.gmail.com
@@ -148,4 +146,4 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_key
 
 - Use the API documentation at http://localhost:8000/docs for testing endpoints
 - Check browser console and backend logs for errors
-- The application uses feature-centric architecture for better maintainability 
+- The application uses feature-centric architecture for better maintainability

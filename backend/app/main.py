@@ -12,7 +12,7 @@ from app.api.templates import templates_router
 load_dotenv()
 
 app = FastAPI(
-    title="Clavel Assignment API",
+    title="Templater API",
     description="Full-stack web application API with authentication and template management",
     version="1.0.0"
 )
@@ -36,7 +36,7 @@ app.include_router(templates_router, prefix="/api/templates", tags=["Templates"]
 
 @app.get("/")
 async def root():
-    return {"message": "Clavel Assignment API is running!"}
+    return {"message": "Templater API is running!"}
 
 @app.get("/health")
 async def health_check():

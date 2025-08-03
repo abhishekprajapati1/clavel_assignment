@@ -16,9 +16,9 @@ from app.schemas.auth import UserDetailsResponse, SessionResponse, SessionStatsR
 class AuthService:
     def __init__(self, db: AsyncIOMotorClient):
         self.db = db
-        self.users_collection = db.clavel_app.users
-        self.sessions_collection = db.clavel_app.user_sessions
-        self.tokens_collection = db.clavel_app.auth_tokens
+        self.users_collection = db.templater.users
+        self.sessions_collection = db.templater.user_sessions
+        self.tokens_collection = db.templater.auth_tokens
 
     async def create_user(self, user_data: UserCreate) -> UserInDB:
         # Check if user already exists
@@ -47,7 +47,7 @@ class AuthService:
         # Send verification email
         verification_url = f"{settings.FRONTEND_URL}/verify-email?token={verification_token}"
         email_body = f"""
-        <h2>Welcome to Clavel Assignment!</h2>
+        <h2>Welcome to Templater!</h2>
         <p>Please verify your email by clicking the link below:</p>
         <a href="{verification_url}">Verify Email</a>
         <p>This link will expire in 24 hours.</p>

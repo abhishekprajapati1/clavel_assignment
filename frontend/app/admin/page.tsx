@@ -48,9 +48,9 @@ export default function AdminPage() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">C</span>
+              <span className="text-white font-bold text-sm">T</span>
             </div>
-            <span className="text-xl font-bold text-gray-900">Clavel Admin</span>
+            <span className="text-xl font-bold text-gray-900">Templater Admin</span>
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600">

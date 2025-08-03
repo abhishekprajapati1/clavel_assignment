@@ -15,7 +15,7 @@ from app.schemas.template import TemplateResponse, TemplateListResponse
 class TemplateService:
     def __init__(self, db: AsyncIOMotorClient):
         self.db = db
-        self.templates_collection = db.clavel_app.templates
+        self.templates_collection = db.templater.templates
         self.upload_dir = "uploads"
 
     async def create_template(self, template_data: TemplateCreate, uploaded_by: ObjectId) -> TemplateInDB:
@@ -87,7 +87,7 @@ class TemplateService:
         template_responses = []
         for template in templates:
             # Get uploader name
-            uploader = await self.db.clavel_app.users.find_one({"_id": template["uploaded_by"]})
+            uploader = await self.db.templater.users.find_one({"_id": template["uploaded_by"]})
             uploader_name = f"{uploader.get('first_name', '')} {uploader.get('last_name', '')}".strip() if uploader else "Unknown"
             
             template_response = TemplateResponse(
@@ -118,7 +118,7 @@ class TemplateService:
             return None
 
         # Get uploader name
-        uploader = await self.db.clavel_app.users.find_one({"_id": template["uploaded_by"]})
+        uploader = await self.db.templater.users.find_one({"_id": template["uploaded_by"]})
         uploader_name = f"{uploader.get('first_name', '')} {uploader.get('last_name', '')}".strip() if uploader else "Unknown"
 
         return TemplateResponse(
@@ -140,7 +140,7 @@ class TemplateService:
         # Only allow admin or the uploader to update
         if template["uploaded_by"] != user_id:
             # Check if user is admin
-            user = await self.db.clavel_app.users.find_one({"_id": user_id})
+            user = await self.db.templater.users.find_one({"_id": user_id})
             if not user or user.get("role") != "admin":
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -172,7 +172,7 @@ class TemplateService:
         # Only allow admin or the uploader to delete
         if template["uploaded_by"] != user_id:
             # Check if user is admin
-            user = await self.db.clavel_app.users.find_one({"_id": user_id})
+            user = await self.db.templater.users.find_one({"_id": user_id})
             if not user or user.get("role") != "admin":
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,

@@ -10,9 +10,9 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">C</span>
+              <span className="text-white font-bold text-sm">T</span>
             </div>
-            <span className="text-xl font-bold text-gray-900">Clavel</span>
+            <span className="text-xl font-bold text-gray-900">Templater</span>
           </div>
           <div className="flex items-center space-x-4">
             <Link href="/auth/signin">
@@ -128,7 +128,7 @@ export default function HomePage() {
       <footer className="border-t bg-white">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-gray-600">
-            <p>&copy; 2024 Clavel Assignment. All rights reserved.</p>
+            <p>&copy; 2024 Templater. All rights reserved.</p>
           </div>
         </div>
       </footer>

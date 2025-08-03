@@ -47,7 +47,7 @@ A comprehensive full-stack web application built with Next.js (frontend) and Fas
 ## 📁 Project Structure
 
 ```
-clavel_assignment/
+templater/
 ├── frontend/                 # Next.js application
 │   ├── app/                 # App Router pages
 │   ├── features/            # Feature-centric modules
@@ -97,7 +97,7 @@ clavel_assignment/
 4. **Set environment variables:**
    Create a `.env` file in the backend directory:
    ```env
-   MONGODB_URL=mongodb://localhost:27017/clavel_app
+   MONGODB_URL=your-mongodb-url
    JWT_SECRET_KEY=your-super-secret-jwt-key
    JWT_REFRESH_SECRET_KEY=your-super-secret-refresh-key
    EMAIL_HOST=smtp.gmail.com

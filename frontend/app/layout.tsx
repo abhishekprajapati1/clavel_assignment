@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Clavel Assignment",
+  title: "Templater",
   description: "Full-stack web application with authentication and template management",
 };
 
