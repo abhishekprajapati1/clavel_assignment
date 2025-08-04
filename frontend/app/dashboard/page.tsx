@@ -1,33 +1,42 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import useLoggedInUser from '@/features/auth/hooks/useLoggedInUser'
-import { useTemplates } from '@/features/templates/hooks/useTemplates'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ScreenshotProtection } from '@/features/user/components/ScreenshotProtection'
-import useSignout from '@/features/auth/hooks/useSignout'
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import useLoggedInUser from "@/features/auth/hooks/useLoggedInUser";
+import { useTemplates } from "@/features/templates/hooks/useTemplates";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ScreenshotProtection } from "@/features/user/components/ScreenshotProtection";
+import useSignout from "@/features/auth/hooks/useSignout";
+import { Settings } from "lucide-react";
 
 export default function DashboardPage() {
-  const { user, isAdmin } = useLoggedInUser()
+  const router = useRouter();
+  const { user, isAdmin } = useLoggedInUser();
   const { mutate: logout } = useSignout();
-  const { templates, isLoading } = useTemplates()
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const { templates, isLoading } = useTemplates();
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   // Redirect admin to admin dashboard
   useEffect(() => {
     if (user && isAdmin) {
-      window.location.href = '/admin'
+      window.location.href = "/admin";
     }
-  }, [user, isAdmin])
+  }, [user, isAdmin]);
 
   const handleLogout = () => {
-    logout()
-  }
+    logout();
+  };
 
   const handleScreenshotAttempt = () => {
-    setShowPaymentModal(true)
-  }
+    setShowPaymentModal(true);
+  };
 
   if (isLoading) {
     return (
@@ -37,7 +46,7 @@ export default function DashboardPage() {
           <p className="mt-4 text-gray-600">Loading templates...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -55,6 +64,15 @@ export default function DashboardPage() {
             <span className="text-sm text-gray-600">
               Welcome, {user?.first_name} {user?.last_name}
             </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push("/settings")}
+              className="flex items-center gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Settings
+            </Button>
             <Button variant="outline" onClick={handleLogout}>
               Logout
             </Button>
@@ -93,7 +111,9 @@ export default function DashboardPage() {
                 <CardContent>
                   <div className="flex items-center justify-between text-sm text-gray-500">
                     <span>By {template.uploaded_by}</span>
-                    <span>{new Date(template.created_at).toLocaleDateString()}</span>
+                    <span>
+                      {new Date(template.created_at).toLocaleDateString()}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
@@ -103,12 +123,26 @@ export default function DashboardPage() {
           {templates?.templates?.length === 0 && (
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <svg
+                  className="w-8 h-8 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No templates available</h3>
-              <p className="text-gray-600">Templates will appear here once uploaded by administrators.</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No templates available
+              </h3>
+              <p className="text-gray-600">
+                Templates will appear here once uploaded by administrators.
+              </p>
             </div>
           )}
         </ScreenshotProtection>
@@ -118,9 +152,12 @@ export default function DashboardPage() {
       {showPaymentModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-8 max-w-md mx-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Screenshot Detected</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Screenshot Detected
+            </h2>
             <p className="text-gray-600 mb-6">
-              Screenshot protection is enabled. To access this content, please complete the payment process.
+              Screenshot protection is enabled. To access this content, please
+              complete the payment process.
             </p>
             <div className="flex space-x-4">
               <Button
@@ -132,8 +169,8 @@ export default function DashboardPage() {
               </Button>
               <Button
                 onClick={() => {
-                  setShowPaymentModal(false)
-                  window.location.href = '/payment'
+                  setShowPaymentModal(false);
+                  window.location.href = "/payment";
                 }}
                 className="flex-1"
               >
@@ -144,5 +181,5 @@ export default function DashboardPage() {
         </div>
       )}
     </div>
-  )
-} 
+  );
+}

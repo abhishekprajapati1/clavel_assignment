@@ -314,3 +314,144 @@ class AuthService:
 
         await send_email(email, "Verify Your Email", email_body)
         return True
+
+    async def update_user_profile(self, user_id: str, profile_data: dict) -> UserInDB:
+        """Update user profile information"""
+        allowed_fields = ["first_name", "last_name", "email"]
+        update_data = {k: v for k, v in profile_data.items() if k in allowed_fields}
+        update_data["updated_at"] = datetime.utcnow()
+
+        # If email is being changed, check if it's already taken
+        if "email" in update_data:
+            existing_user = await self.users_collection.find_one({
+                "email": update_data["email"],
+                "_id": {"$ne": ObjectId(user_id)}
+            })
+            if existing_user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Email already in use"
+                )
+
+        result = await self.users_collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": update_data}
+        )
+
+        if result.modified_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        updated_user = await self.users_collection.find_one({"_id": ObjectId(user_id)})
+        return UserInDB(**updated_user)
+
+    async def change_password(self, user_id: str, current_password: str, new_password: str) -> bool:
+        """Change user password"""
+        user = await self.users_collection.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        # Verify current password
+        if not verify_password(current_password, user["hashed_password"]):
+            return False
+
+        # Update password
+        hashed_password = get_password_hash(new_password)
+        result = await self.users_collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {
+                "$set": {
+                    "hashed_password": hashed_password,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+
+        return result.modified_count > 0
+
+    async def get_user_settings(self, user_id: str) -> dict:
+        """Get user account settings and preferences"""
+        user = await self.users_collection.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        # Get session count
+        session_count = await self.sessions_collection.count_documents({
+            "user_id": ObjectId(user_id),
+            "is_active": True
+        })
+
+        return {
+            "user_info": {
+                "id": str(user["_id"]),
+                "email": user["email"],
+                "first_name": user["first_name"],
+                "last_name": user["last_name"],
+                "is_verified": user.get("is_verified", False),
+                "is_premium": user.get("is_premium", False),
+                "role": user.get("role", "user"),
+                "created_at": user["created_at"],
+                "updated_at": user["updated_at"]
+            },
+            "security": {
+                "active_sessions": session_count,
+                "last_password_change": user.get("password_changed_at"),
+                "two_factor_enabled": user.get("two_factor_enabled", False)
+            },
+            "preferences": user.get("preferences", {
+                "email_notifications": True,
+                "security_alerts": True,
+                "marketing_emails": False
+            })
+        }
+
+    async def update_user_preferences(self, user_id: str, preferences: dict) -> bool:
+        """Update user preferences"""
+        allowed_preferences = [
+            "email_notifications",
+            "security_alerts",
+            "marketing_emails",
+            "theme",
+            "language"
+        ]
+
+        filtered_preferences = {
+            k: v for k, v in preferences.items()
+            if k in allowed_preferences
+        }
+
+        result = await self.users_collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {
+                "$set": {
+                    "preferences": filtered_preferences,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+
+        return result.modified_count > 0
+
+    async def delete_user_account(self, user_id: str) -> bool:
+        """Permanently delete user account and all associated data"""
+        # Deactivate all sessions first
+        await self.deactivate_all_sessions(user_id)
+
+        # Delete auth tokens
+        await self.tokens_collection.delete_many({"user_id": ObjectId(user_id)})
+
+        # Delete sessions
+        await self.sessions_collection.delete_many({"user_id": ObjectId(user_id)})
+
+        # Delete user record
+        result = await self.users_collection.delete_one({"_id": ObjectId(user_id)})
+
+        return result.deleted_count > 0

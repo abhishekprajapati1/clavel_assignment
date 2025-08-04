@@ -331,3 +331,83 @@ async def resend_verification(
     auth_service = AuthService(db)
     await auth_service.resend_verification(email)
     return MessageResponse(message="Verification email sent successfully")
+
+# Account Settings Endpoints
+
+@auth_router.put("/settings/profile", response_model=UserDetailsResponse)
+async def update_profile(
+    profile_data: dict,
+    current_user: UserDetailsResponse = Depends(get_current_user),
+    db: AsyncIOMotorClient = Depends(get_database)
+):
+    auth_service = AuthService(db)
+    updated_user = await auth_service.update_user_profile(
+        str(current_user.id),
+        profile_data
+    )
+    return UserDetailsResponse(
+        id=str(updated_user.id),
+        email=updated_user.email,
+        first_name=updated_user.first_name,
+        last_name=updated_user.last_name,
+        role=updated_user.role,
+        is_active=updated_user.is_active,
+        is_verified=updated_user.is_verified,
+        is_premium=updated_user.is_premium,
+        created_at=updated_user.created_at,
+        updated_at=updated_user.updated_at
+    )
+
+@auth_router.put("/settings/password", response_model=MessageResponse)
+async def change_password(
+    password_data: dict,
+    current_user: UserDetailsResponse = Depends(get_current_user),
+    db: AsyncIOMotorClient = Depends(get_database)
+):
+    auth_service = AuthService(db)
+    success = await auth_service.change_password(
+        str(current_user.id),
+        password_data.get("current_password"),
+        password_data.get("new_password")
+    )
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+    return MessageResponse(message="Password changed successfully")
+
+@auth_router.get("/settings", response_model=dict)
+async def get_account_settings(
+    current_user: UserDetailsResponse = Depends(get_current_user),
+    db: AsyncIOMotorClient = Depends(get_database)
+):
+    auth_service = AuthService(db)
+    settings_data = await auth_service.get_user_settings(str(current_user.id))
+    return settings_data
+
+@auth_router.put("/settings/preferences", response_model=MessageResponse)
+async def update_preferences(
+    preferences: dict,
+    current_user: UserDetailsResponse = Depends(get_current_user),
+    db: AsyncIOMotorClient = Depends(get_database)
+):
+    auth_service = AuthService(db)
+    await auth_service.update_user_preferences(str(current_user.id), preferences)
+    return MessageResponse(message="Preferences updated successfully")
+
+@auth_router.delete("/settings/account", response_model=MessageResponse)
+async def delete_account(
+    confirmation_data: dict,
+    current_user: UserDetailsResponse = Depends(get_current_user),
+    db: AsyncIOMotorClient = Depends(get_database)
+):
+    if confirmation_data.get("confirmation") != "DELETE_MY_ACCOUNT":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid confirmation text"
+        )
+
+    auth_service = AuthService(db)
+    await auth_service.delete_user_account(str(current_user.id))
+    return MessageResponse(message="Account deleted successfully")

@@ -156,6 +156,74 @@ export const authApi = {
   },
 };
 
+export const settingsApi = {
+  // Get user sessions
+  getUserSessions: async () => {
+    const response = await api.get("/api/auth/sessions");
+    return response.data;
+  },
+
+  // Get session statistics
+  getSessionStats: async () => {
+    const response = await api.get("/api/auth/sessions/stats");
+    return response.data;
+  },
+
+  // Update user profile
+  updateProfile: async (profileData: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  }) => {
+    const response = await api.put("/api/auth/settings/profile", profileData);
+    return response.data;
+  },
+
+  // Change password
+  changePassword: async (passwordData: {
+    current_password: string;
+    new_password: string;
+  }) => {
+    const response = await api.put("/api/auth/settings/password", passwordData);
+    return response.data;
+  },
+
+  // Logout from specific session
+  logoutSession: async (sessionId: string) => {
+    const response = await api.delete(`/api/auth/sessions/${sessionId}`);
+    return response.data;
+  },
+
+  // Logout from all devices
+  logoutAllDevices: async () => {
+    const response = await api.delete("/api/auth/sessions");
+    return response.data;
+  },
+
+  // Delete account
+  deleteAccount: async (confirmation: string) => {
+    const response = await api.delete("/api/auth/settings/account", {
+      data: { confirmation },
+    });
+    return response.data;
+  },
+
+  // Get account settings
+  getAccountSettings: async () => {
+    const response = await api.get("/api/auth/settings");
+    return response.data;
+  },
+
+  // Update preferences
+  updatePreferences: async (preferences: Record<string, any>) => {
+    const response = await api.put(
+      "/api/auth/settings/preferences",
+      preferences,
+    );
+    return response.data;
+  },
+};
+
 export const templateApi = {
   // Get templates list
   getTemplates: async (page = 1, perPage = 10) => {
