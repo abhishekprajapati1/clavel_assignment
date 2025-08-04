@@ -6,7 +6,7 @@ import sys
 
 class Settings(BaseSettings):
     DEBUG: bool = True
-    
+
     # Database
     MONGODB_URL: str = Field(default=..., description="Please set MONGODB_URL in your .env file.")
 
@@ -30,10 +30,11 @@ class Settings(BaseSettings):
     # File upload
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10MB
     ALLOWED_IMAGE_TYPES: list = ["image/jpeg", "image/png", "image/gif", "image/webp"]
-    
+
     # STRIPE
     STRIPE_PUBLIC_KEY: str
     STRIPE_SECRET_KEY: str
+    STRIPE_WEBHOOK_SECRET: Optional[str] = None
 
     class Config:
         env_file = ".env"

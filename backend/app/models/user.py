@@ -38,6 +38,7 @@ class UserBase(BaseModel):
     role: str = Field(default="user", pattern="^(admin|user)$")
     is_active: bool = Field(default=True)
     is_verified: bool = Field(default=False)
+    is_premium: bool = Field(default=False)
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8)
@@ -48,6 +49,7 @@ class UserUpdate(BaseModel):
     role: str = Field(default="user", pattern="^(admin|user)$")
     is_active: Optional[bool] = None
     is_verified: Optional[bool] = None
+    is_premium: Optional[bool] = None
 
 class UserInDB(UserBase):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
@@ -56,6 +58,8 @@ class UserInDB(UserBase):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     verification_token: Optional[str] = None
     verification_token_expires: Optional[datetime] = None
+    stripe_customer_id: Optional[str] = None
+    premium_activated_at: Optional[datetime] = None
 
     model_config = {
         "populate_by_name": True,

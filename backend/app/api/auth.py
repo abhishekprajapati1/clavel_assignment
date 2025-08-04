@@ -63,6 +63,7 @@ async def get_current_user(
         role=user.role,
         is_active=user.is_active,
         is_verified=user.is_verified,
+        is_premium=user.is_premium,
         created_at=user.created_at,
         updated_at=user.updated_at
     )
@@ -155,6 +156,7 @@ async def signin(
             role=user.role,
             is_active=user.is_active,
             is_verified=user.is_verified,
+            is_premium=user.is_premium,
             created_at=user.created_at,
             updated_at=user.updated_at
         )

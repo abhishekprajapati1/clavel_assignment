@@ -33,6 +33,7 @@ class UserDetailsResponse(BaseModel):
     role: str
     is_active: bool
     is_verified: bool
+    is_premium: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -59,4 +60,4 @@ class SessionStatsResponse(BaseModel):
     sessions_by_browser: dict
 
 class MessageResponse(BaseModel):
-    message: str 
+    message: str

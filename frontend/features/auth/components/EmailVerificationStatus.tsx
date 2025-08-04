@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-interface EmailVerificationStatusProps {
+export interface EmailVerificationStatusProps {
   status: "loading" | "success" | "error" | "expired" | "invalid";
   message?: string;
   error?: string;

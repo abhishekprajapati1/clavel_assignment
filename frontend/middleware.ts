@@ -4,6 +4,21 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Handle API proxying to backend
+  if (pathname.startsWith("/api")) {
+    const backendUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const apiPath = pathname.replace("/api", "/api");
+    const url = new URL(apiPath, backendUrl);
+
+    // Copy search params
+    request.nextUrl.searchParams.forEach((value, key) => {
+      url.searchParams.set(key, value);
+    });
+
+    return NextResponse.rewrite(url);
+  }
+
   // Public routes that don't require authentication
   const publicRoutes = [
     "/",
@@ -57,11 +72,10 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };

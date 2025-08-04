@@ -64,6 +64,7 @@ async def create_admin_user():
                             "role": "admin",
                             "is_verified": True,
                             "is_active": True,
+                            "is_premium": True,
                             "updated_at": datetime.utcnow()
                         }
                     }
@@ -90,6 +91,7 @@ async def create_admin_user():
             hashed_password=hashed_password,
             is_active=True,
             is_verified=True,  # Admin is automatically verified
+            is_premium=True,   # Admin has premium access by default
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow()
         )

@@ -132,14 +132,14 @@ const VerificationHandler: React.FC = () => {
   return (
     <EmailVerificationStatus
       status={verificationStatus}
-      message={verificationMessage}
-      error={verificationErrorMessage}
+      message={verificationMessage || ""}
+      error={verificationErrorMessage || ""}
       email={userEmail}
       onResendVerification={handleResendVerification}
       onRetry={handleRetryVerification}
       isResending={isResending}
-      resendMessage={resendMessage}
-      resendError={resendErrorMessage}
+      resendMessage={resendMessage || ""}
+      resendError={resendErrorMessage || ""}
     />
   );
 };

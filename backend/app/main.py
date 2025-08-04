@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.core.database import connect_to_mongo, close_mongo_connection
 from app.api.auth import auth_router
 from app.api.templates import templates_router
+from app.api.stripe import router as stripe_router
 import sys
 import os
 
@@ -40,6 +41,7 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 # Include routers
 app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(templates_router, prefix="/api/templates", tags=["Templates"])
+app.include_router(stripe_router, prefix="/api/payment", tags=["Payment"])
 
 @app.on_event("startup")
 async def startup_event():
