@@ -1,15 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/features/auth/hooks/useLoggedInUser'
+import useLoggedInUser from '@/features/auth/hooks/useLoggedInUser'
 import { useTemplates } from '@/features/templates/hooks/useTemplates'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { CreateTemplateModal } from '@/features/admin/components/CreateTemplateModal'
+import useSignout from '@/features/auth/hooks/useSignout'
 
 export default function AdminPage() {
-  const { user, logout, isAdmin } = useAuth()
+  const { user, isAdmin } = useLoggedInUser()
+  const { mutate: logout} = useSignout();
   const { templates, deleteTemplate, isDeleting } = useTemplates()
   const [showCreateModal, setShowCreateModal] = useState(false)
 
