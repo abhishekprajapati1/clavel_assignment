@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     # File upload
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10MB
     ALLOWED_IMAGE_TYPES: list = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+    
+    # STRIPE
+    STRIPE_PUBLIC_KEY: str
+    STRIPE_SECRET_KEY: str
 
     class Config:
         env_file = ".env"
