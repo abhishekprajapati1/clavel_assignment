@@ -1,17 +1,17 @@
 from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
 from fastapi import HTTPException, status
 from app.core.security import (
-    get_password_hash, verify_password, create_access_token, 
+    get_password_hash, verify_password, create_access_token,
     create_refresh_token, verify_token, create_verification_token,
     create_reset_token, send_email, get_device_info
 )
 from app.core.config import settings
-from app.models.user import UserInDB, UserCreate, UserUpdate
+from app.models.user import UserInDB, UserCreate
 from app.models.session import UserSessionInDB, AuthTokenInDB
-from app.schemas.auth import UserDetailsResponse, SessionResponse, SessionStatsResponse
+from app.schemas.auth import SignUpRequest, SessionResponse, SessionStatsResponse
 
 class AuthService:
     def __init__(self, db: AsyncIOMotorClient):
@@ -20,7 +20,7 @@ class AuthService:
         self.sessions_collection = db.templater.user_sessions
         self.tokens_collection = db.templater.auth_tokens
 
-    async def create_user(self, user_data: UserCreate) -> UserInDB:
+    async def create_user(self, user_data: SignUpRequest) -> UserInDB:
         # Check if user already exists
         existing_user = await self.users_collection.find_one({"email": user_data.email})
         if existing_user:
@@ -34,14 +34,14 @@ class AuthService:
         verification_expires = datetime.utcnow() + timedelta(hours=24)
 
         # Create user document
-        user_dict = user_data.dict()
+        user_dict = user_data.model_dump()
         user_dict["hashed_password"] = get_password_hash(user_data.password)
         user_dict["verification_token"] = verification_token
         user_dict["verification_token_expires"] = verification_expires
         user_dict.pop("password", None)
 
         user = UserInDB(**user_dict)
-        result = await self.users_collection.insert_one(user.dict(by_alias=True))
+        result = await self.users_collection.insert_one(user.model_dump(by_alias=True))
         user.id = result.inserted_id
 
         # Send verification email
@@ -97,7 +97,7 @@ class AuthService:
         user = await self.users_collection.find_one({"email": email})
         if not user:
             return None
-        
+
         if not verify_password(password, user["hashed_password"]):
             return None
 
@@ -113,9 +113,9 @@ class AuthService:
             "is_active": True,
             "last_activity": datetime.utcnow()
         }
-        
+
         session = UserSessionInDB(**session_data)
-        session_result = await self.sessions_collection.insert_one(session.dict(by_alias=True))
+        session_result = await self.sessions_collection.insert_one(session.model_dump(by_alias=True))
         session.id = session_result.inserted_id
 
         # Create tokens
@@ -123,10 +123,10 @@ class AuthService:
             "user_id": str(user_id),
             "role": "user"  # Will be updated from user data
         }
-        
+
         access_token = create_access_token(token_data)
         refresh_token = create_refresh_token(token_data)
-        
+
         auth_token_data = {
             "session_id": session.id,
             "access_token": access_token,
@@ -134,11 +134,19 @@ class AuthService:
             "expires_at": datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
             "is_active": True
         }
-        
+
         auth_token = AuthTokenInDB(**auth_token_data)
-        await self.tokens_collection.insert_one(auth_token.dict(by_alias=True))
+        await self.tokens_collection.insert_one(auth_token.model_dump(by_alias=True))
 
         return session, auth_token
+
+    def create_access_token(self, data: dict) -> str:
+        """Create access token using the security module function"""
+        return create_access_token(data)
+
+    def create_refresh_token(self, data: dict) -> str:
+        """Create refresh token using the security module function"""
+        return create_refresh_token(data)
 
     async def get_user_by_id(self, user_id: str) -> Optional[UserInDB]:
         user = await self.users_collection.find_one({"_id": ObjectId(user_id)})
@@ -180,7 +188,7 @@ class AuthService:
                 }
             }
         ]
-        
+
         stats_result = await self.sessions_collection.aggregate(pipeline).to_list(None)
         stats = stats_result[0] if stats_result else {
             "total_sessions": 0,
@@ -220,7 +228,7 @@ class AuthService:
 
         reset_token = create_reset_token(email)
         reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
-        
+
         email_body = f"""
         <h2>Password Reset Request</h2>
         <p>You requested a password reset. Click the link below to reset your password:</p>
@@ -228,7 +236,7 @@ class AuthService:
         <p>This link will expire in 1 hour.</p>
         <p>If you didn't request this, please ignore this email.</p>
         """
-        
+
         await send_email(email, "Password Reset Request", email_body)
         return True
 
@@ -242,7 +250,7 @@ class AuthService:
 
         email = payload.get("email")
         hashed_password = get_password_hash(new_password)
-        
+
         result = await self.users_collection.update_one(
             {"email": email},
             {
@@ -299,6 +307,6 @@ class AuthService:
         <a href="{verification_url}">Verify Email</a>
         <p>This link will expire in 24 hours.</p>
         """
-        
+
         await send_email(email, "Verify Your Email", email_body)
-        return True 
+        return True

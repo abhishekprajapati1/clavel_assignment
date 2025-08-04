@@ -1,12 +1,11 @@
 from datetime import datetime, timedelta
-from typing import Optional, Union
+from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from app.core.config import settings
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import json
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -22,15 +21,17 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    
-    to_encode.update({"exp": expire, "type": "access"})
+
+    to_encode["exp"] = expire
+    to_encode["type"] = "access"
     encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
     return encoded_jwt
 
 def create_refresh_token(data: dict) -> str:
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode.update({"exp": expire, "type": "refresh"})
+    to_encode["exp"] = expire
+    to_encode["type"] = "refresh"
     encoded_jwt = jwt.encode(to_encode, settings.JWT_REFRESH_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
     return encoded_jwt
 
@@ -44,33 +45,33 @@ def verify_token(token: str, secret_key: str) -> Optional[dict]:
 def create_verification_token(email: str) -> str:
     data = {"email": email, "type": "verification"}
     expire = datetime.utcnow() + timedelta(hours=24)
-    data.update({"exp": expire})
+    data["exp"] = expire
     return jwt.encode(data, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
 def create_reset_token(email: str) -> str:
     data = {"email": email, "type": "reset"}
     expire = datetime.utcnow() + timedelta(hours=1)
-    data.update({"exp": expire})
+    data["exp"] = expire
     return jwt.encode(data, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
 async def send_email(to_email: str, subject: str, body: str) -> bool:
     if not all([settings.EMAIL_HOST, settings.EMAIL_USER, settings.EMAIL_PASSWORD]):
         print(f"Email would be sent to {to_email}: {subject}")
         return True
-    
+
     try:
         msg = MIMEMultipart()
-        msg['From'] = settings.EMAIL_USER
+        msg['From'] = settings.EMAIL_USER or ""
         msg['To'] = to_email
         msg['Subject'] = subject
-        
+
         msg.attach(MIMEText(body, 'html'))
-        
-        server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
-        server.starttls()
-        server.login(settings.EMAIL_USER, settings.EMAIL_PASSWORD)
+
+        server = smtplib.SMTP_SSL(settings.EMAIL_HOST or "", settings.EMAIL_PORT)
+        # server.starttls()
+        server.login(settings.EMAIL_USER or "", settings.EMAIL_PASSWORD or "")
         text = msg.as_string()
-        server.sendmail(settings.EMAIL_USER, to_email, text)
+        server.sendmail(settings.EMAIL_USER or "", to_email, text)
         server.quit()
         return True
     except Exception as e:
@@ -86,9 +87,9 @@ def get_device_info(user_agent: str) -> dict:
         "os": "Unknown",
         "device": "Unknown"
     }
-    
+
     user_agent_lower = user_agent.lower()
-    
+
     # Detect browser
     if "chrome" in user_agent_lower:
         device_info["browser"] = "Chrome"
@@ -98,7 +99,7 @@ def get_device_info(user_agent: str) -> dict:
         device_info["browser"] = "Safari"
     elif "edge" in user_agent_lower:
         device_info["browser"] = "Edge"
-    
+
     # Detect OS
     if "windows" in user_agent_lower:
         device_info["os"] = "Windows"
@@ -110,7 +111,7 @@ def get_device_info(user_agent: str) -> dict:
         device_info["os"] = "Android"
     elif "ios" in user_agent_lower:
         device_info["os"] = "iOS"
-    
+
     # Detect device type
     if "mobile" in user_agent_lower or "android" in user_agent_lower or "iphone" in user_agent_lower:
         device_info["device"] = "Mobile"
@@ -118,5 +119,5 @@ def get_device_info(user_agent: str) -> dict:
         device_info["device"] = "Tablet"
     else:
         device_info["device"] = "Desktop"
-    
-    return device_info 
+
+    return device_info

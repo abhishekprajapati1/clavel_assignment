@@ -5,6 +5,8 @@ from pydantic_core import ValidationError
 import sys
 
 class Settings(BaseSettings):
+    DEBUG: bool = True
+    
     # Database
     MONGODB_URL: str = Field(default=..., description="Please set MONGODB_URL in your .env file.")
 

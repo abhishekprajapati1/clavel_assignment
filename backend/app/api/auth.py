@@ -1,8 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from fastapi.security import HTTPBearer
 from motor.motor_asyncio import AsyncIOMotorClient
-from bson import ObjectId
-from datetime import timedelta
 from typing import List
 
 from app.core.database import get_database
@@ -28,7 +26,7 @@ async def get_current_user(
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
             access_token = auth_header.split(" ")[1]
-    
+
     if not access_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -96,7 +94,7 @@ async def signin(
     db: AsyncIOMotorClient = Depends(get_database)
 ):
     auth_service = AuthService(db)
-    
+
     # Authenticate user
     user = await auth_service.authenticate_user(user_data.email, user_data.password)
     if not user:
@@ -120,7 +118,7 @@ async def signin(
     # Create session and tokens
     user_agent = request.headers.get("User-Agent", "")
     client_ip = request.client.host if request.client else None
-    
+
     session, auth_token = await auth_service.create_session(
         user.id, user_agent, client_ip
     )
@@ -134,7 +132,7 @@ async def signin(
         samesite="lax",
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
     )
-    
+
     response.set_cookie(
         key="refresh_token",
         value=auth_token.refresh_token,
@@ -203,9 +201,15 @@ async def refresh_token(
         )
 
     user_id = payload.get("user_id")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload"
+        )
+
     auth_service = AuthService(db)
     user = await auth_service.get_user_by_id(user_id)
-    
+
     if not user or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -226,7 +230,7 @@ async def refresh_token(
         samesite="lax",
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
     )
-    
+
     response.set_cookie(
         key="refresh_token",
         value=new_refresh_token,
@@ -268,11 +272,11 @@ async def logout(
 ):
     auth_service = AuthService(db)
     await auth_service.deactivate_all_sessions(str(current_user.id))
-    
+
     # Clear cookies
     response.delete_cookie("access_token")
     response.delete_cookie("refresh_token")
-    
+
     return MessageResponse(message="Logged out successfully")
 
 @auth_router.get("/sessions", response_model=List[SessionResponse])
@@ -324,4 +328,4 @@ async def resend_verification(
 ):
     auth_service = AuthService(db)
     await auth_service.resend_verification(email)
-    return MessageResponse(message="Verification email sent successfully") 
+    return MessageResponse(message="Verification email sent successfully")

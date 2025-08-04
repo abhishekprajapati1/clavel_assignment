@@ -19,13 +19,13 @@ class TemplateService:
         self.upload_dir = "uploads"
 
     async def create_template(self, template_data: TemplateCreate, uploaded_by: ObjectId) -> TemplateInDB:
-        template_dict = template_data.dict()
+        template_dict = template_data.model_dump()
         template_dict["uploaded_by"] = uploaded_by
-        
+
         template = TemplateInDB(**template_dict)
-        result = await self.templates_collection.insert_one(template.dict(by_alias=True))
+        result = await self.templates_collection.insert_one(template.model_dump(by_alias=True))
         template.id = result.inserted_id
-        
+
         return template
 
     async def upload_image(self, file: UploadFile) -> str:
@@ -40,7 +40,7 @@ class TemplateService:
         file_size = 0
         content = await file.read()
         file_size = len(content)
-        
+
         if file_size > settings.MAX_FILE_SIZE:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -62,12 +62,12 @@ class TemplateService:
                 # Convert to RGB if necessary
                 if img.mode in ('RGBA', 'LA', 'P'):
                     img = img.convert('RGB')
-                
+
                 # Resize if too large (optional)
                 max_size = (1920, 1080)
                 if img.size[0] > max_size[0] or img.size[1] > max_size[1]:
                     img.thumbnail(max_size, Image.Resampling.LANCZOS)
-                
+
                 img.save(file_path, 'JPEG', quality=85, optimize=True)
         except Exception as e:
             # If image processing fails, continue with original file
@@ -78,18 +78,18 @@ class TemplateService:
     async def get_templates(self, skip: int = 0, limit: int = 10) -> TemplateListResponse:
         # Get total count
         total = await self.templates_collection.count_documents({})
-        
+
         # Get templates with pagination
         cursor = self.templates_collection.find({}).skip(skip).limit(limit).sort("created_at", -1)
         templates = await cursor.to_list(None)
-        
+
         # Convert to response format
         template_responses = []
         for template in templates:
             # Get uploader name
             uploader = await self.db.templater.users.find_one({"_id": template["uploaded_by"]})
             uploader_name = f"{uploader.get('first_name', '')} {uploader.get('last_name', '')}".strip() if uploader else "Unknown"
-            
+
             template_response = TemplateResponse(
                 id=str(template["_id"]),
                 title=template["title"],
@@ -148,7 +148,7 @@ class TemplateService:
                 )
 
         # Update template
-        update_data = template_data.dict(exclude_unset=True)
+        update_data = template_data.model_dump(exclude_unset=True)
         update_data["updated_at"] = datetime.utcnow()
 
         result = await self.templates_collection.update_one(
@@ -195,11 +195,11 @@ class TemplateService:
     async def get_templates_by_user(self, user_id: ObjectId, skip: int = 0, limit: int = 10) -> TemplateListResponse:
         # Get total count
         total = await self.templates_collection.count_documents({"uploaded_by": user_id})
-        
+
         # Get templates with pagination
         cursor = self.templates_collection.find({"uploaded_by": user_id}).skip(skip).limit(limit).sort("created_at", -1)
         templates = await cursor.to_list(None)
-        
+
         # Convert to response format
         template_responses = []
         for template in templates:
@@ -223,4 +223,4 @@ class TemplateService:
             page=page,
             per_page=limit,
             total_pages=total_pages
-        ) 
+        )

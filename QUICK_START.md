@@ -23,7 +23,7 @@
    source venv/bin/activate
    pip install --upgrade pip # upgrade pip
    pip install -r requirements.txt # install dependencies
-   uvicorn app.main:app --reload # starts the backend server at port 8000
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 # starts the backend server at port 8000
    ```
    **Frontend Setup**
    ```bash
