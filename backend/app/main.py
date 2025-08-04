@@ -8,6 +8,12 @@ from app.core.config import settings
 from app.core.database import connect_to_mongo, close_mongo_connection
 from app.api.auth import auth_router
 from app.api.templates import templates_router
+import sys
+import os
+
+# Add create_admin script
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+from create_admin import ensure_admin_exists
 
 # Load environment variables
 load_dotenv()
@@ -38,6 +44,8 @@ app.include_router(templates_router, prefix="/api/templates", tags=["Templates"]
 @app.on_event("startup")
 async def startup_event():
     await connect_to_mongo()
+    # Create admin user if it doesn't exist
+    await ensure_admin_exists()
 
 @app.on_event("shutdown")
 async def shutdown_event():

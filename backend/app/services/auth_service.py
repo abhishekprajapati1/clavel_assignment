@@ -104,6 +104,10 @@ class AuthService:
         return UserInDB(**user)
 
     async def create_session(self, user_id: ObjectId, user_agent: str, ip_address: Optional[str] = None) -> tuple[UserSessionInDB, AuthTokenInDB]:
+        # Get user data to include correct role in token
+        user = await self.users_collection.find_one({"_id": user_id})
+        user_role = user.get("role", "user") if user else "user"
+
         # Create session
         device_info = get_device_info(user_agent)
         session_data = {
@@ -118,10 +122,10 @@ class AuthService:
         session_result = await self.sessions_collection.insert_one(session.model_dump(by_alias=True))
         session.id = session_result.inserted_id
 
-        # Create tokens
+        # Create tokens with correct user role
         token_data = {
             "user_id": str(user_id),
-            "role": "user"  # Will be updated from user data
+            "role": user_role
         }
 
         access_token = create_access_token(token_data)
