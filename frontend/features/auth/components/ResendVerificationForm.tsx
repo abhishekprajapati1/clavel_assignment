@@ -1,67 +1,88 @@
-'use client'
+"use client";
 
-import React, { useState } from 'react'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import * as z from 'zod'
-import { Mail, Loader2, CheckCircle, XCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { useResendVerification } from '../hooks/useEmailVerification'
+import React, { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Mail, Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useResendVerification } from "../hooks/useEmailVerification";
 
 const resendSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-})
+  email: z.string().email("Please enter a valid email address"),
+});
 
-type ResendFormData = z.infer<typeof resendSchema>
+type ResendFormData = z.infer<typeof resendSchema>;
 
 interface ResendVerificationFormProps {
-  initialEmail?: string
-  onSuccess?: (email: string) => void
-  onCancel?: () => void
-  showCancel?: boolean
-  className?: string
+  initialEmail?: string;
+  onSuccess?: (email: string) => void;
+  onCancel?: () => void;
+  showCancel?: boolean;
+  className?: string;
 }
 
 export const ResendVerificationForm: React.FC<ResendVerificationFormProps> = ({
-  initialEmail = '',
+  initialEmail = "",
   onSuccess,
   onCancel,
   showCancel = true,
-  className = '',
+  className = "",
 }) => {
-  const { isLoading, isSuccess, isError, error, message, resendVerification, reset } = useResendVerification()
-  const [submitted, setSubmitted] = useState(false)
+  const {
+    isLoading,
+    isSuccess,
+    isError,
+    error,
+    message,
+    resendVerification,
+    reset,
+  } = useResendVerification();
+  const [submitted, setSubmitted] = useState(false);
 
   const form = useForm<ResendFormData>({
     resolver: zodResolver(resendSchema),
     defaultValues: {
       email: initialEmail,
     },
-  })
+  });
 
   const onSubmit = async (data: ResendFormData) => {
     try {
-      setSubmitted(true)
-      await resendVerification(data.email)
+      setSubmitted(true);
+      await resendVerification(data.email);
       if (onSuccess) {
-        onSuccess(data.email)
+        onSuccess(data.email);
       }
     } catch (error) {
       // Error is handled by the hook
-      console.error('Resend verification failed:', error)
+      console.error("Resend verification failed:", error);
     }
-  }
+  };
 
   const handleReset = () => {
-    reset()
-    setSubmitted(false)
-    form.reset()
-  }
+    reset();
+    setSubmitted(false);
+    form.reset();
+  };
 
   if (isSuccess && submitted) {
     return (
@@ -74,7 +95,8 @@ export const ResendVerificationForm: React.FC<ResendVerificationFormProps> = ({
             Verification Email Sent!
           </CardTitle>
           <CardDescription className="text-gray-600">
-            {message || `We've sent a new verification link to ${form.getValues('email')}`}
+            {message ||
+              `We've sent a new verification link to ${form.getValues("email")}`}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -87,16 +109,12 @@ export const ResendVerificationForm: React.FC<ResendVerificationFormProps> = ({
           </Alert>
 
           <div className="space-y-3">
-            <Button
-              onClick={handleReset}
-              variant="outline"
-              className="w-full"
-            >
+            <Button onClick={handleReset} variant="outline" className="w-full">
               Send to Different Email
             </Button>
 
             <Button
-              onClick={() => window.location.href = '/auth/signin'}
+              onClick={() => (window.location.href = "/signin")}
               className="w-full"
             >
               Back to Sign In
@@ -104,7 +122,7 @@ export const ResendVerificationForm: React.FC<ResendVerificationFormProps> = ({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -175,7 +193,9 @@ export const ResendVerificationForm: React.FC<ResendVerificationFormProps> = ({
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={onCancel || (() => window.location.href = '/auth/signin')}
+                  onClick={
+                    onCancel || (() => (window.location.href = "/signin"))
+                  }
                   disabled={isLoading}
                   className="w-full"
                 >
@@ -187,13 +207,11 @@ export const ResendVerificationForm: React.FC<ResendVerificationFormProps> = ({
         </Form>
 
         <div className="mt-6 text-center text-sm text-gray-500">
-          <p>
-            Remember to check your spam folder if you don't see the email.
-          </p>
+          <p>Remember to check your spam folder if you don't see the email.</p>
         </div>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default ResendVerificationForm
+export default ResendVerificationForm;

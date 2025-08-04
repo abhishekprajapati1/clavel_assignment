@@ -22,15 +22,17 @@ class TemplateInDB(TemplateBase):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    class Config:
-        validate_by_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+    model_config = {
+        "populate_by_name": True,
+        "arbitrary_types_allowed": True,
+        "json_encoders": {ObjectId: str}
+    }
 
 class TemplateResponse(TemplateBase):
     id: str
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        json_encoders = {ObjectId: str} 
+    model_config = {
+        "json_encoders": {ObjectId: str}
+    }

@@ -6,14 +6,21 @@ from bson import ObjectId
 
 class PyObjectId(ObjectId):
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        from pydantic_core import core_schema
+        return core_schema.with_info_plain_validator_function(
+            cls.validate,
+            serialization=core_schema.to_string_ser_schema(),
+        )
 
     @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid ObjectId")
-        return ObjectId(v)
+    def validate(cls, v, info=None):
+        if isinstance(v, ObjectId):
+            return v
+        if isinstance(v, str):
+            if ObjectId.is_valid(v):
+                return ObjectId(v)
+        raise ValueError("Invalid ObjectId")
 
     @classmethod
     def __get_pydantic_json_schema__(
@@ -50,15 +57,17 @@ class UserInDB(UserBase):
     verification_token: Optional[str] = None
     verification_token_expires: Optional[datetime] = None
 
-    class Config:
-        validate_by_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+    model_config = {
+        "populate_by_name": True,
+        "arbitrary_types_allowed": True,
+        "json_encoders": {ObjectId: str}
+    }
 
 class UserResponse(UserBase):
     id: str
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        json_encoders = {ObjectId: str} 
+    model_config = {
+        "json_encoders": {ObjectId: str}
+    }

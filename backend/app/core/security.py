@@ -6,8 +6,29 @@ from app.core.config import settings
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import warnings
+import os
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Suppress bcrypt version warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="passlib")
+os.environ['PASSLIB_SUPPRESS_BCRYPT_VERSION_WARNING'] = '1'
+
+# Monkey patch to fix bcrypt version detection
+try:
+    import bcrypt
+    if not hasattr(bcrypt, '__about__'):
+        class MockAbout:
+            __version__ = bcrypt.__version__ if hasattr(bcrypt, '__version__') else "4.3.0"
+        bcrypt.__about__ = MockAbout()
+except ImportError:
+    pass
+
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__rounds=12,
+    bcrypt__ident="2b"
+)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)

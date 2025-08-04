@@ -9,11 +9,7 @@ import {
   useEmailVerification,
   useResendVerification,
 } from "@/features/auth/hooks/useEmailVerification";
-import {
-  validateEmailVerificationToken,
-  extractEmailFromToken,
-  debugToken,
-} from "@/features/auth/utils/jwt";
+import { extractEmailFromToken } from "@/features/auth/utils/jwt";
 import { Loader2 } from "lucide-react";
 
 // Component to handle the verification logic
@@ -50,20 +46,9 @@ const VerificationHandler: React.FC = () => {
   // Auto-verify email on component mount if token exists
   useEffect(() => {
     if (token) {
-      // Validate token format first
-      const tokenInfo = validateAndExtractTokenInfo(token);
-
-      if (!tokenInfo.isValid) {
-        if (tokenInfo.isExpired) {
-          setVerificationStatus("expired");
-        } else {
-          setVerificationStatus("invalid");
-        }
-        return;
-      }
-
-      // Extract email from valid token
-      setUserEmail(tokenInfo.email);
+      // Extract email from token for display/resend functionality
+      const email = extractEmailFromToken(token);
+      setUserEmail(email);
 
       // Proceed with verification
       handleEmailVerification(token);
@@ -81,13 +66,18 @@ const VerificationHandler: React.FC = () => {
       const errorMessage =
         error.response?.data?.detail || error.message || "Verification failed";
 
-      // Determine error type based on error message
-      if (errorMessage.toLowerCase().includes("expired")) {
-        setVerificationStatus("expired");
-      } else if (errorMessage.toLowerCase().includes("invalid")) {
-        setVerificationStatus("invalid");
-      } else if (errorMessage.toLowerCase().includes("already verified")) {
-        setVerificationStatus("success");
+      // Determine error type based on API response
+      if (error.response?.status === 400) {
+        const detail = error.response?.data?.detail;
+        if (detail?.includes("expired")) {
+          setVerificationStatus("expired");
+        } else if (detail?.includes("invalid")) {
+          setVerificationStatus("invalid");
+        } else if (detail?.includes("already verified")) {
+          setVerificationStatus("success");
+        } else {
+          setVerificationStatus("error");
+        }
       } else {
         setVerificationStatus("error");
       }
@@ -113,26 +103,6 @@ const VerificationHandler: React.FC = () => {
       handleEmailVerification(token);
     }
   };
-
-  const validateAndExtractTokenInfo = (token: string) => {
-    // Debug token in development
-    if (process.env.NODE_ENV === "development") {
-      debugToken(token);
-    }
-
-    const validation = validateEmailVerificationToken(token);
-    const email = extractEmailFromToken(token);
-
-    return {
-      isValid: validation.isValid,
-      email,
-      error: validation.error,
-      isExpired: validation.isExpired,
-    };
-  };
-
-  // This effect is now handled in the initial token validation above
-  // Keeping this comment for clarity
 
   // Reset resend state when verification status changes
   useEffect(() => {
