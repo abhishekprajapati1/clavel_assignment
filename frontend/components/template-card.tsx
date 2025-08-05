@@ -218,7 +218,7 @@ export default function TemplateCard({
                 imageLoading ? "opacity-0" : "opacity-100"
               } ${
                 !hasPremiumAccess && enableScreenshotProtection
-                  ? "group-hover:scale-105 filter blur-[2px]"
+                  ? "group-hover:scale-105 filter blur-[0.5px]"
                   : "group-hover:scale-105"
               }`}
               onLoad={handleImageLoad}
@@ -336,7 +336,7 @@ export default function TemplateCard({
                   fill
                   className={`object-contain ${
                     !hasPremiumAccess && enableScreenshotProtection
-                      ? "filter blur-[3px]"
+                      ? "filter blur-[1px]"
                       : ""
                   }`}
                 />

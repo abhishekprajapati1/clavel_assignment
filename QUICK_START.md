@@ -76,21 +76,11 @@ All these actions will trigger the payment redirect.
 ## Environment Configuration
 
 ### Backend (.env)
-```env
-MONGODB_URL=your_mongodb_url
-JWT_SECRET_KEY=your-super-secret-jwt-key
-JWT_REFRESH_SECRET_KEY=your-super-secret-refresh-key
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASSWORD=your-app-password
-FRONTEND_URL=http://localhost:3000
-```
+ - copy .env.example's content to .env file.
 
 ### Frontend (.env.local)
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_key
 ```
 
 ## Features Overview
@@ -118,8 +108,6 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_key
 - ✅ Screenshot attempt detection
 - ✅ Right-click and developer tools blocking
 
-## Troubleshooting
-
 ### Common Issues
 
 1. **MongoDB Connection Error:**
@@ -137,9 +125,3 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_key
 4. **CORS Errors:**
    - Ensure FRONTEND_URL is correctly set in backend/.env
    - Check that the frontend is running on the expected port
-
-### Development Tips
-
-- Use the API documentation at http://localhost:8000/docs for testing endpoints
-- Check browser console and backend logs for errors
-- The application uses feature-centric architecture for better maintainability

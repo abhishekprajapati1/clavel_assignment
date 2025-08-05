@@ -128,7 +128,6 @@ templater/
    Create a `.env.local` file in the frontend directory:
    ```env
    NEXT_PUBLIC_API_URL=http://localhost:8000
-   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_key
    ```
 
 4. **Run the frontend:**
@@ -144,7 +143,6 @@ The screenshot protection feature can be tested in several ways:
 2. **Snipping Tool:** Try to use Windows Snipping Tool or similar
 3. **Browser Developer Tools:** Press `F12` or `Ctrl+Shift+I`
 4. **Right-click:** Right-click on protected content
-5. **Save As:** Try to save the page or images
 
 When any of these actions are detected, the user will be redirected to the payment page.
 
@@ -197,10 +195,11 @@ When any of these actions are detected, the user will be redirected to the payme
 - Session management includes device tracking
 - Screenshot protection is implemented using multiple detection methods
 - Role-based access control is enforced at both frontend and backend levels
+- But still we cannot prevent all forms of screen capture or image manipulation.
 
 ## 🔧 Development
 
 - Backend runs on `http://localhost:8000`
 - Frontend runs on `http://localhost:3000`
 - MongoDB should be running locally or use a cloud instance
-- API documentation available at `http://localhost:8000/docs` when backend is running 
+- API documentation available at `http://localhost:8000/docs` when backend is running

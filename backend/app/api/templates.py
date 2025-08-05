@@ -128,25 +128,25 @@ async def serve_protected_file(
             # 2. Add blur effect
             # 3. Reduce resolution
 
-            # Resize to 70% of original size
+            # Resize to 85% of original size (more visible)
             original_size = img.size
-            new_size = (int(original_size[0] * 0.7), int(original_size[1] * 0.7))
+            new_size = (int(original_size[0] * 0.85), int(original_size[1] * 0.85))
             img_degraded = img.resize(new_size, Image.Resampling.LANCZOS)
 
-            # Apply blur effect
-            img_degraded = img_degraded.filter(ImageFilter.GaussianBlur(radius=1.5))
+            # Apply subtle blur effect
+            img_degraded = img_degraded.filter(ImageFilter.GaussianBlur(radius=0.8))
 
             # Save to bytes with reduced quality
             img_bytes = io.BytesIO()
 
             # Determine format for saving
             if filename.lower().endswith('.png'):
-                # For PNG, we'll convert to JPEG with low quality to reduce file size
-                img_degraded.save(img_bytes, format='JPEG', quality=60, optimize=True)
+                # For PNG, we'll convert to JPEG with medium quality to reduce file size
+                img_degraded.save(img_bytes, format='JPEG', quality=75, optimize=True)
                 media_type = "image/jpeg"
             else:
                 # For JPEG and other formats
-                img_degraded.save(img_bytes, format='JPEG', quality=60, optimize=True)
+                img_degraded.save(img_bytes, format='JPEG', quality=75, optimize=True)
                 media_type = "image/jpeg"
 
             img_bytes.seek(0)
