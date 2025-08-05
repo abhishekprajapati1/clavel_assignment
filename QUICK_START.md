@@ -11,7 +11,7 @@
 
 1. **Clone and setup the project:**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/abhishekprajapati1/templater.git
    cd templater
    ```
 
