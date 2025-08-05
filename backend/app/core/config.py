@@ -36,6 +36,45 @@ class Settings(BaseSettings):
     STRIPE_SECRET_KEY: str
     STRIPE_WEBHOOK_SECRET: Optional[str] = None
 
+    # Environment and Security
+    ENVIRONMENT: str = "development"  # development, staging, production
+    COOKIE_SECURE: Optional[bool] = None  # Auto-detect based on environment if None
+    COOKIE_SAMESITE: str = "lax"  # lax, strict, none
+    COOKIE_DOMAIN: Optional[str] = None  # Auto-detect if None
+
+    @property
+    def is_production(self) -> bool:
+        """Check if running in production environment"""
+        return self.ENVIRONMENT.lower() in ("production", "prod")
+
+    @property
+    def is_development(self) -> bool:
+        """Check if running in development environment"""
+        return self.ENVIRONMENT.lower() in ("development", "dev", "local")
+
+    @property
+    def should_use_secure_cookies(self) -> bool:
+        """Determine if cookies should be secure based on environment"""
+        if self.COOKIE_SECURE is not None:
+            return self.COOKIE_SECURE
+
+        # Auto-detect: use secure cookies in production or when using HTTPS
+        if self.is_production:
+            return True
+
+        # Check if frontend URL uses HTTPS
+        return self.FRONTEND_URL.startswith("https://")
+
+    @property
+    def cookie_domain_setting(self) -> Optional[str]:
+        """Get the appropriate cookie domain setting"""
+        if self.COOKIE_DOMAIN:
+            return self.COOKIE_DOMAIN
+
+        # In production, you might want to set a specific domain
+        # For now, let browser handle it automatically
+        return None
+
     class Config:
         env_file = ".env"
 

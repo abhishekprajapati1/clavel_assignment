@@ -6,6 +6,7 @@ from typing import List, Optional
 from app.core.database import get_database
 from app.core.security import verify_token
 from app.core.config import settings
+from app.core.cookies import set_auth_cookies, clear_auth_cookies
 from app.services.auth_service import AuthService
 from app.schemas.auth import (
     SignUpRequest, SignInRequest, VerifyEmailRequest, ForgotPasswordRequest,
@@ -168,23 +169,13 @@ async def signin(
         user.id, user_agent, client_ip
     )
 
-    # Set cookies
-    response.set_cookie(
-        key="access_token",
-        value=auth_token.access_token,
-        httponly=True,
-        secure=False,  # Set to True in production with HTTPS
-        samesite="lax",
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
-    )
-
-    response.set_cookie(
-        key="refresh_token",
-        value=auth_token.refresh_token,
-        httponly=True,
-        secure=False,  # Set to True in production with HTTPS
-        samesite="lax",
-        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+    # Set cookies with proper security settings
+    set_auth_cookies(
+        response=response,
+        access_token=auth_token.access_token,
+        refresh_token=auth_token.refresh_token,
+        access_token_expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        refresh_token_expires_in=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
     )
 
     return AuthResponse(
@@ -264,26 +255,18 @@ async def refresh_token(
 
     # Create new tokens
     token_data = {"user_id": str(user.id), "role": user.role}
+    # Create new tokens and update cookies
+    token_data = {"user_id": str(user.id), "role": user.role}
     new_access_token = auth_service.create_access_token(token_data)
     new_refresh_token = auth_service.create_refresh_token(token_data)
 
-    # Set new cookies
-    response.set_cookie(
-        key="access_token",
-        value=new_access_token,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
-    )
-
-    response.set_cookie(
-        key="refresh_token",
-        value=new_refresh_token,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+    # Set new cookies with proper security settings
+    set_auth_cookies(
+        response=response,
+        access_token=new_access_token,
+        refresh_token=new_refresh_token,
+        access_token_expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        refresh_token_expires_in=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
     )
 
     return AuthResponse(
@@ -319,9 +302,8 @@ async def logout(
     auth_service = AuthService(db)
     await auth_service.deactivate_all_sessions(str(current_user.id))
 
-    # Clear cookies
-    response.delete_cookie("access_token")
-    response.delete_cookie("refresh_token")
+    # Clear cookies with proper security settings
+    clear_auth_cookies(response)
 
     return MessageResponse(message="Logged out successfully")
 

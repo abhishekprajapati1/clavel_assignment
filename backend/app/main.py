@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 from app.core.config import settings
 from app.core.database import connect_to_mongo, close_mongo_connection
+from app.core.cookies import get_cookie_config, log_cookie_config
 from app.api.auth import auth_router
 from app.api.templates import templates_router
 from app.api.stripe import router as stripe_router
@@ -70,3 +71,14 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+@app.get("/debug/cookies")
+async def debug_cookie_config():
+    """Debug endpoint to check cookie configuration"""
+    config = get_cookie_config()
+    log_cookie_config()
+    return {
+        "message": "Cookie configuration",
+        "config": config,
+        "note": "Check server logs for detailed cookie configuration"
+    }
