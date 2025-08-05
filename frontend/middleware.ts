@@ -47,7 +47,6 @@ export function middleware(request: NextRequest) {
     signInUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(signInUrl);
   }
-
   // If accessing auth pages while already authenticated, redirect to dashboard
   if (
     accessToken &&

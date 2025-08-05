@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query, Request
 from fastapi.responses import FileResponse, Response
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
@@ -7,13 +7,14 @@ import os
 import logging
 
 from app.core.database import get_database
-from app.api.auth import get_current_user, get_current_admin
+from app.api.auth import get_current_user, get_current_admin, get_current_user_optional
 from app.schemas.auth import UserDetailsResponse
 from app.schemas.template import (
     TemplateCreateRequest, TemplateUpdateRequest, TemplateResponse,
     TemplateListResponse, MessageResponse
 )
 from app.services.template_service import TemplateService
+from app.services.analytics_service import AnalyticsService
 from app.models.template import TemplateCreate
 from app.middleware.premium import require_premium_access, PremiumAccessControl, PremiumAccessError
 
@@ -35,7 +36,9 @@ async def get_templates(
 @templates_router.get("/{template_id}", response_model=TemplateResponse)
 async def get_template(
     template_id: str,
-    db: AsyncIOMotorClient = Depends(get_database)
+    request: Request,
+    db: AsyncIOMotorClient = Depends(get_database),
+    current_user: Optional[UserDetailsResponse] = Depends(get_current_user_optional)
 ):
     """Get a specific template by ID (public endpoint)"""
     template_service = TemplateService(db)
@@ -45,6 +48,20 @@ async def get_template(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Template not found"
         )
+
+    # Log template view
+    try:
+        analytics_service = AnalyticsService(db)
+        await analytics_service.log_view(
+            template_id=template_id,
+            user_id=current_user.id if current_user else None,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent")
+        )
+    except Exception:
+        # Don't fail if analytics logging fails
+        pass
+
     return template
 
 @templates_router.post("/", response_model=TemplateResponse)
@@ -147,6 +164,7 @@ async def get_my_templates(
 @templates_router.get("/{template_id}/download")
 async def download_template(
     template_id: str,
+    request: Request,
     current_user: UserDetailsResponse = Depends(require_premium_access),
     db: AsyncIOMotorClient = Depends(get_database)
 ):
@@ -174,6 +192,19 @@ async def download_template(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Template file not found"
         )
+
+    # Log template download
+    try:
+        analytics_service = AnalyticsService(db)
+        await analytics_service.log_download(
+            template_id=template_id,
+            user_id=current_user.id,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent")
+        )
+    except Exception:
+        # Don't fail if analytics logging fails
+        pass
 
     # Get original filename for download
     filename = os.path.basename(full_path)

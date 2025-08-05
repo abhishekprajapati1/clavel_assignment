@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from fastapi.security import HTTPBearer
 from motor.motor_asyncio import AsyncIOMotorClient
-from typing import List
+from typing import List, Optional
 
 from app.core.database import get_database
 from app.core.security import verify_token
@@ -77,6 +77,50 @@ async def get_current_admin(
             detail="Admin access required"
         )
     return current_user
+
+async def get_current_user_optional(
+    request: Request,
+    db: AsyncIOMotorClient = Depends(get_database)
+) -> Optional[UserDetailsResponse]:
+    """Get current user without raising exception if not authenticated"""
+    try:
+        # Get token from cookies first, then from Authorization header
+        access_token = request.cookies.get("access_token")
+        if not access_token:
+            auth_header = request.headers.get("Authorization")
+            if auth_header and auth_header.startswith("Bearer "):
+                access_token = auth_header.split(" ")[1]
+
+        if not access_token:
+            return None
+
+        payload = verify_token(access_token, settings.JWT_SECRET_KEY)
+        if not payload or payload.get("type") != "access":
+            return None
+
+        user_id = payload.get("user_id")
+        if not user_id:
+            return None
+
+        auth_service = AuthService(db)
+        user = await auth_service.get_user_by_id(user_id)
+        if not user or not user.is_active:
+            return None
+
+        return UserDetailsResponse(
+            id=str(user.id),
+            email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            role=user.role,
+            is_active=user.is_active,
+            is_verified=user.is_verified,
+            is_premium=user.is_premium,
+            created_at=user.created_at,
+            updated_at=user.updated_at
+        )
+    except Exception:
+        return None
 
 @auth_router.post("/signup", response_model=MessageResponse)
 async def signup(

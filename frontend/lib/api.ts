@@ -80,6 +80,27 @@ api.interceptors.request.use(
   },
 );
 
+// Define public routes that don't require authentication
+const publicRoutes = [
+  "/",
+  "/signin",
+  "/signup",
+  "/verify-email",
+  "/forgot-password",
+  "/reset-password",
+  "/resend-verification",
+];
+
+// Helper function to check if current path is a public route
+const isPublicRoute = (pathname: string): boolean => {
+  return publicRoutes.some((route) => {
+    if (route === "/") {
+      return pathname === "/";
+    }
+    return pathname.startsWith(route + "/") || pathname === route;
+  });
+};
+
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response: AxiosResponse) => {
@@ -90,10 +111,14 @@ api.interceptors.response.use(
 
     // Handle specific error cases
     if (error.response?.status === 401) {
-      // Redirect to login if not authenticated
+      // Only redirect to login if not on a public page to prevent infinite loops
       if (typeof window !== "undefined") {
         const currentPath = window.location.pathname;
-        window.location.href = `/signin?redirect=${encodeURIComponent(currentPath)}`;
+
+        // Don't redirect if we're already on a public page
+        if (!isPublicRoute(currentPath)) {
+          window.location.href = `/signin?redirect=${encodeURIComponent(currentPath)}`;
+        }
       }
     } else if (error.response?.status === 402) {
       // Payment required - don't show toast, let component handle it
@@ -310,10 +335,11 @@ export const useUserAccessInfo = () => {
 };
 
 // User Details Query
-export const useUserDetails = () => {
+export const useUserDetails = (options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: queryKeys.userDetails,
     queryFn: authApi.getUserDetails,
+    enabled: options?.enabled !== false,
     retry: (failureCount, error) => {
       const axiosError = error as AxiosError;
       if (axiosError.response?.status === 401) {

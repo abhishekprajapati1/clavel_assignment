@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { Navbar } from "@/components/layout/navbar";
 import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
@@ -16,7 +17,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Templater",
-  description: "Full-stack web application with authentication and template management",
+  description:
+    "Full-stack web application with authentication and template management",
 };
 
 export default function RootLayout({
@@ -30,15 +32,16 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          {children}
-          <Toaster 
+          <Navbar />
+          <main className="pt-16">{children}</main>
+          <Toaster
             position="top-right"
             toastOptions={{
               duration: 4000,
               style: {
-                background: 'hsl(var(--background))',
-                color: 'hsl(var(--foreground))',
-                border: '1px solid hsl(var(--border))',
+                background: "hsl(var(--background))",
+                color: "hsl(var(--foreground))",
+                border: "1px solid hsl(var(--border))",
               },
             }}
           />

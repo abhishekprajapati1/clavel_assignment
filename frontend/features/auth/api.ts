@@ -22,13 +22,41 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Define public routes that don't require authentication
+const publicRoutes = [
+  "/",
+  "/signin",
+  "/signup",
+  "/verify-email",
+  "/forgot-password",
+  "/reset-password",
+  "/resend-verification",
+];
+
+// Helper function to check if current path is a public route
+const isPublicRoute = (pathname: string): boolean => {
+  return publicRoutes.some((route) => {
+    if (route === "/") {
+      return pathname === "/";
+    }
+    return pathname.startsWith(route + "/") || pathname === route;
+  });
+};
+
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Redirect to login if unauthorized
-      window.location.href = "/signin";
+      // Only redirect to login if not on a public page to prevent infinite loops
+      if (typeof window !== "undefined") {
+        const currentPath = window.location.pathname;
+
+        // Don't redirect if we're already on a public page
+        if (!isPublicRoute(currentPath)) {
+          window.location.href = "/signin";
+        }
+      }
     }
     return Promise.reject(error);
   },

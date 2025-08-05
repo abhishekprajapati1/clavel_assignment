@@ -293,7 +293,11 @@ function SettingsContent() {
 
   const getDeviceIcon = (deviceInfo: Session["device_info"]) => {
     const userAgent = deviceInfo.user_agent?.toLowerCase() || "";
-    if (userAgent.includes("mobile") || userAgent.includes("android") || userAgent.includes("iphone")) {
+    if (
+      userAgent.includes("mobile") ||
+      userAgent.includes("android") ||
+      userAgent.includes("iphone")
+    ) {
       return <Smartphone className="w-4 h-4" />;
     }
     return <Monitor className="w-4 h-4" />;
@@ -322,12 +326,14 @@ function SettingsContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Settings className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Account Settings
+            </h1>
           </div>
           <p className="text-gray-600">
             Manage your account, security, and preferences
@@ -356,12 +362,12 @@ function SettingsContent() {
                     Premium
                   </Badge>
                 )}
-                <Badge variant={userDetails?.is_verified ? "default" : "destructive"}>
+                <Badge
+                  variant={userDetails?.is_verified ? "default" : "destructive"}
+                >
                   {userDetails?.is_verified ? "Verified" : "Unverified"}
                 </Badge>
-                <Badge variant="outline">
-                  {userDetails?.role}
-                </Badge>
+                <Badge variant="outline">{userDetails?.role}</Badge>
               </div>
             </div>
           </CardContent>
@@ -406,7 +412,10 @@ function SettingsContent() {
                         id="first_name"
                         value={profileForm.first_name}
                         onChange={(e) =>
-                          setProfileForm({ ...profileForm, first_name: e.target.value })
+                          setProfileForm({
+                            ...profileForm,
+                            first_name: e.target.value,
+                          })
                         }
                         required
                       />
@@ -417,7 +426,10 @@ function SettingsContent() {
                         id="last_name"
                         value={profileForm.last_name}
                         onChange={(e) =>
-                          setProfileForm({ ...profileForm, last_name: e.target.value })
+                          setProfileForm({
+                            ...profileForm,
+                            last_name: e.target.value,
+                          })
                         }
                         required
                       />
@@ -430,7 +442,10 @@ function SettingsContent() {
                       type="email"
                       value={profileForm.email}
                       onChange={(e) =>
-                        setProfileForm({ ...profileForm, email: e.target.value })
+                        setProfileForm({
+                          ...profileForm,
+                          email: e.target.value,
+                        })
                       }
                       required
                     />
@@ -542,7 +557,9 @@ function SettingsContent() {
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="confirm_password">Confirm New Password</Label>
+                    <Label htmlFor="confirm_password">
+                      Confirm New Password
+                    </Label>
                     <div className="relative">
                       <Input
                         id="confirm_password"
@@ -580,7 +597,8 @@ function SettingsContent() {
                   <Alert>
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
-                      Password must be at least 8 characters long and contain a mix of letters, numbers, and symbols.
+                      Password must be at least 8 characters long and contain a
+                      mix of letters, numbers, and symbols.
                     </AlertDescription>
                   </Alert>
                   <Button type="submit" disabled={isUpdating}>
@@ -619,19 +637,25 @@ function SettingsContent() {
                         <div className="text-2xl font-bold text-blue-600">
                           {sessionStats.active_sessions}
                         </div>
-                        <div className="text-sm text-gray-600">Active Sessions</div>
+                        <div className="text-sm text-gray-600">
+                          Active Sessions
+                        </div>
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold text-gray-600">
                           {sessionStats.total_sessions}
                         </div>
-                        <div className="text-sm text-gray-600">Total Sessions</div>
+                        <div className="text-sm text-gray-600">
+                          Total Sessions
+                        </div>
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold text-orange-600">
                           {sessionStats.inactive_sessions}
                         </div>
-                        <div className="text-sm text-gray-600">Expired Sessions</div>
+                        <div className="text-sm text-gray-600">
+                          Expired Sessions
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -645,7 +669,8 @@ function SettingsContent() {
                     <div>
                       <CardTitle>Active Sessions</CardTitle>
                       <CardDescription>
-                        Manage devices that are currently signed in to your account
+                        Manage devices that are currently signed in to your
+                        account
                       </CardDescription>
                     </div>
                     <div className="flex gap-2">
@@ -655,7 +680,9 @@ function SettingsContent() {
                         onClick={loadSessions}
                         disabled={loadingSessions}
                       >
-                        <RefreshCw className={`w-4 h-4 mr-2 ${loadingSessions ? 'animate-spin' : ''}`} />
+                        <RefreshCw
+                          className={`w-4 h-4 mr-2 ${loadingSessions ? "animate-spin" : ""}`}
+                        />
                         Refresh
                       </Button>
                       <Button
@@ -671,46 +698,52 @@ function SettingsContent() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {sessions.filter(s => s.is_active).map((session) => (
-                      <div
-                        key={session.id}
-                        className="flex items-center justify-between p-4 border rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          {getDeviceIcon(session.device_info)}
-                          <div>
-                            <div className="font-medium">
-                              {getDeviceName(session.device_info)}
-                            </div>
-                            <div className="text-sm text-gray-600 flex items-center gap-4">
-                              {session.ip_address && (
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="w-3 h-3" />
-                                  {session.ip_address}
+                    {sessions
+                      .filter((s) => s.is_active)
+                      .map((session) => (
+                        <div
+                          key={session.id}
+                          className="flex items-center justify-between p-4 border rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            {getDeviceIcon(session.device_info)}
+                            <div>
+                              <div className="font-medium">
+                                {getDeviceName(session.device_info)}
+                              </div>
+                              <div className="text-sm text-gray-600 flex items-center gap-4">
+                                {session.ip_address && (
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="w-3 h-3" />
+                                    {session.ip_address}
+                                  </span>
+                                )}
+                                <span>
+                                  Last active:{" "}
+                                  {formatDate(session.last_activity)}
                                 </span>
-                              )}
-                              <span>Last active: {formatDate(session.last_activity)}</span>
+                              </div>
                             </div>
                           </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="default">Active</Badge>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleLogoutSession(session.id)}
+                            >
+                              <LogOut className="w-4 h-4 mr-1" />
+                              Logout
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="default">Active</Badge>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleLogoutSession(session.id)}
-                          >
-                            <LogOut className="w-4 h-4 mr-1" />
-                            Logout
-                          </Button>
+                      ))}
+                    {sessions.filter((s) => s.is_active).length === 0 &&
+                      !loadingSessions && (
+                        <div className="text-center py-8 text-gray-500">
+                          No active sessions found
                         </div>
-                      </div>
-                    ))}
-                    {sessions.filter(s => s.is_active).length === 0 && !loadingSessions && (
-                      <div className="text-center py-8 text-gray-500">
-                        No active sessions found
-                      </div>
-                    )}
+                      )}
                     {loadingSessions && (
                       <div className="text-center py-8">
                         <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
@@ -741,11 +774,17 @@ function SettingsContent() {
                 </Alert>
 
                 <div className="border border-red-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-red-600 mb-2">Delete Account</h3>
+                  <h3 className="font-semibold text-red-600 mb-2">
+                    Delete Account
+                  </h3>
                   <p className="text-sm text-gray-600 mb-4">
-                    Permanently delete your account and all associated data. This action cannot be reversed.
+                    Permanently delete your account and all associated data.
+                    This action cannot be reversed.
                   </p>
-                  <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                  <Dialog
+                    open={showDeleteDialog}
+                    onOpenChange={setShowDeleteDialog}
+                  >
                     <DialogTrigger asChild>
                       <Button variant="destructive">
                         <Trash2 className="w-4 h-4 mr-2" />
@@ -756,8 +795,9 @@ function SettingsContent() {
                       <DialogHeader>
                         <DialogTitle>Delete Account</DialogTitle>
                         <DialogDescription>
-                          This action cannot be undone. This will permanently delete your
-                          account and remove all your data from our servers.
+                          This action cannot be undone. This will permanently
+                          delete your account and remove all your data from our
+                          servers.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4">
@@ -768,7 +808,9 @@ function SettingsContent() {
                           <Input
                             id="delete_confirmation"
                             value={deleteConfirmation}
-                            onChange={(e) => setDeleteConfirmation(e.target.value)}
+                            onChange={(e) =>
+                              setDeleteConfirmation(e.target.value)
+                            }
                             placeholder="DELETE_MY_ACCOUNT"
                           />
                         </div>
