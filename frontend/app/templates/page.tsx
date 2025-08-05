@@ -28,8 +28,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ScreenshotProtection } from "@/features/user/components/ScreenshotProtection";
+
 import { CreateTemplateModal } from "@/features/admin/components/CreateTemplateModal";
+import TemplateCard from "@/components/template-card";
 import {
   FileImage,
   Search,
@@ -69,10 +70,6 @@ export default function TemplatesPage() {
       router.push("/signin");
     }
   }, [user, router]);
-
-  const handleScreenshotAttempt = () => {
-    setShowPaymentModal(true);
-  };
 
   const handleDownload = async (templateId: string, templateTitle: string) => {
     try {
@@ -366,113 +363,45 @@ export default function TemplatesPage() {
       </Card>
 
       {/* User Template Display */}
-      <ScreenshotProtection onScreenshotAttempt={handleScreenshotAttempt}>
-        {viewMode === "grid" ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAndSortedTemplates?.map((template) => (
-              <Card
-                key={template.id}
-                className="overflow-hidden hover:shadow-lg transition-shadow"
-              >
-                <div className="aspect-video bg-gray-100 relative group">
-                  <img
-                    src={`${process.env.NEXT_PUBLIC_API_URL}${template.image_url}`}
-                    alt={template.title}
-                    className="w-full h-full object-cover"
-                    draggable={false}
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() =>
-                          handleDownload(template.id, template.title)
-                        }
-                      >
-                        <Download className="w-4 h-4 mr-1" />
-                        Download
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                <CardHeader>
-                  <CardTitle className="text-lg">{template.title}</CardTitle>
-                  {template.description && (
-                    <CardDescription>{template.description}</CardDescription>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
-                    <div className="flex items-center gap-1">
-                      <User className="w-3 h-3" />
-                      <span>By {template.uploaded_by}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      <span>{formatDate(template.created_at)}</span>
-                    </div>
-                  </div>
-                  <Button
-                    className="w-full"
-                    onClick={() => handleDownload(template.id, template.title)}
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download Template
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredAndSortedTemplates?.map((template) => (
-              <Card key={template.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-6">
-                    <div className="w-24 h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                      <img
-                        src={`${process.env.NEXT_PUBLIC_API_URL}${template.image_url}`}
-                        alt={template.title}
-                        className="w-full h-full object-cover"
-                        draggable={false}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                        {template.title}
-                      </h3>
-                      {template.description && (
-                        <p className="text-gray-600 text-sm mb-2">
-                          {template.description}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <User className="w-3 h-3" />
-                          <span>By {template.uploaded_by}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          <span>{formatDate(template.created_at)}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <Button
-                      onClick={() =>
-                        handleDownload(template.id, template.title)
-                      }
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </ScreenshotProtection>
+      {viewMode === "grid" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredAndSortedTemplates?.map((template) => (
+            <TemplateCard
+              key={template.id}
+              template={{
+                id: template.id,
+                title: template.title,
+                description: template.description,
+                image_url: template.image_url,
+                uploaded_by: template.uploaded_by,
+                created_at: template.created_at,
+                updated_at: template.updated_at,
+              }}
+              variant="grid"
+              enableScreenshotProtection={true}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredAndSortedTemplates?.map((template) => (
+            <TemplateCard
+              key={template.id}
+              template={{
+                id: template.id,
+                title: template.title,
+                description: template.description,
+                image_url: template.image_url,
+                uploaded_by: template.uploaded_by,
+                created_at: template.created_at,
+                updated_at: template.updated_at,
+              }}
+              variant="list"
+              enableScreenshotProtection={true}
+            />
+          ))}
+        </div>
+      )}
     </>
   );
 
