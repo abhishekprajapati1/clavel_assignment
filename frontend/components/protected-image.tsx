@@ -11,6 +11,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import api from "@/lib/api";
+import { usePremiumAccess } from "./screenshot-protection";
 
 interface ProtectedImageProps {
   src: string;
@@ -42,6 +43,7 @@ export default function ProtectedImage({
   const [error, setError] = useState(false);
   const [isPremiumQuality, setIsPremiumQuality] = useState<boolean>(true);
   const blobUrlRef = useRef<string>("");
+  const { hasPremiumAccess } = usePremiumAccess();
 
   useEffect(() => {
     let isCancelled = false;
@@ -119,9 +121,9 @@ export default function ProtectedImage({
         console.error("🚨 ProtectedImage: Failed to fetch protected image:", {
           src,
           error: err,
-          message: err?.message,
-          status: err?.response?.status,
-          statusText: err?.response?.statusText,
+          message: err instanceof Error ? err.message : "Unknown error",
+          status: (err as any)?.response?.status,
+          statusText: (err as any)?.response?.statusText,
         });
         if (!isCancelled) {
           setError(true);
@@ -231,8 +233,8 @@ export default function ProtectedImage({
     />
   );
 
-  // Wrap with quality indicator if not premium quality
-  if (!isPremiumQuality) {
+  // Only show quality indicator for non-premium users viewing degraded images
+  if (!isPremiumQuality && !hasPremiumAccess) {
     return (
       <div className="relative size-full">
         {imageElement}

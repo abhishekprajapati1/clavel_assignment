@@ -221,18 +221,6 @@ export default function TemplateCard({
               onError={handleImageError}
             />
           )}
-
-          {/* Premium Badge for Free Users */}
-          {!hasPremiumAccess && enableScreenshotProtection && (
-            <div className="absolute top-2 right-2">
-              <Badge
-                variant="secondary"
-                className="text-xs bg-orange-100 text-orange-800"
-              >
-                Premium
-              </Badge>
-            </div>
-          )}
         </div>
 
         {/* Template Info */}

@@ -28,6 +28,84 @@ export default function DevToolsProtection() {
   const lastToastRef = useRef<number>(0);
   const lastDevToolsAttemptRef = useRef<number>(0);
 
+  const detectInitialDevTools = useCallback(() => {
+    if (loading || !user || hasPremiumAccess) return;
+
+    // Check if dev tools are already open on page load
+    const threshold = 200;
+    const isDevToolsOpen =
+      window.outerHeight - window.innerHeight > threshold ||
+      window.outerWidth - window.innerWidth > threshold;
+
+    if (isDevToolsOpen) {
+      // Show persistent warning for dev tools being open
+      toast.error(
+        "Developer tools detected. Please close them for the best experience.",
+        {
+          duration: 5000,
+        },
+      );
+
+      // Apply visual feedback
+      document.body.style.filter = "blur(2px)";
+      document.body.style.pointerEvents = "none";
+
+      // Create overlay with instructions
+      const overlay = document.createElement("div");
+      overlay.id = "devtools-warning-overlay";
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-family: system-ui, -apple-system, sans-serif;
+      `;
+
+      overlay.innerHTML = `
+        <div style="text-align: center; padding: 2rem; background: #1f2937; border-radius: 0.5rem; max-width: 400px;">
+          <h2 style="margin: 0 0 1rem 0; color: #f59e0b;">⚠️ Developer Tools Detected</h2>
+          <p style="margin: 0 0 1.5rem 0; line-height: 1.5;">
+            Please close the developer tools to continue using the application.
+            This helps protect our content and ensures the best user experience.
+          </p>
+          <p style="margin: 0; font-size: 0.875rem; color: #9ca3af;">
+            Premium users have unrestricted access to developer tools.
+          </p>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+
+      // Check periodically if dev tools are closed
+      const checkClosed = setInterval(() => {
+        const stillOpen =
+          window.outerHeight - window.innerHeight > threshold ||
+          window.outerWidth - window.innerWidth > threshold;
+
+        if (!stillOpen) {
+          // Dev tools closed, remove restrictions
+          document.body.style.filter = "";
+          document.body.style.pointerEvents = "";
+          const existingOverlay = document.getElementById(
+            "devtools-warning-overlay",
+          );
+          if (existingOverlay) {
+            existingOverlay.remove();
+          }
+          clearInterval(checkClosed);
+          toast.success("Thank you! You can now use the application normally.");
+        }
+      }, 1000);
+    }
+  }, [loading, user, hasPremiumAccess]);
+
   const handleDevToolsAttempt = useCallback(() => {
     if (loading || !user) return;
 
@@ -188,6 +266,11 @@ export default function DevToolsProtection() {
   useEffect(() => {
     if (loading) return;
 
+    // Detect if dev tools are already open on page load
+    setTimeout(() => {
+      detectInitialDevTools();
+    }, 1000);
+
     // Add keyboard event listener
     document.addEventListener("keydown", blockDevTools, true);
 
@@ -264,6 +347,7 @@ export default function DevToolsProtection() {
     handleGlobalContextMenu,
     detectConsoleDevtools,
     detectConsoleAccess,
+    detectInitialDevTools,
   ]);
 
   // Render protection indicator for free users
