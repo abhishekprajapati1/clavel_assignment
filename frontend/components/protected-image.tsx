@@ -2,7 +2,14 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Crown, Info } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import api from "@/lib/api";
 
 interface ProtectedImageProps {
@@ -33,6 +40,7 @@ export default function ProtectedImage({
   const [imageSrc, setImageSrc] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [isPremiumQuality, setIsPremiumQuality] = useState<boolean>(true);
   const blobUrlRef = useRef<string>("");
 
   useEffect(() => {
@@ -44,7 +52,11 @@ export default function ProtectedImage({
         setError(false);
 
         // If it's already a blob URL or external URL, use it directly
-        if (src.startsWith("blob:") || src.startsWith("http://") || src.startsWith("https://")) {
+        if (
+          src.startsWith("blob:") ||
+          src.startsWith("http://") ||
+          src.startsWith("https://")
+        ) {
           if (!isCancelled) {
             setImageSrc(src);
             setLoading(false);
@@ -61,6 +73,11 @@ export default function ProtectedImage({
         });
 
         if (!isCancelled) {
+          // Check image quality from response headers
+          const premiumQuality =
+            response.headers["x-premium-quality"] === "true";
+          setIsPremiumQuality(premiumQuality);
+
           // Create blob URL
           const blob = new Blob([response.data]);
           const blobUrl = URL.createObjectURL(blob);
@@ -140,22 +157,18 @@ export default function ProtectedImage({
   }
 
   // Use Next.js Image component with the blob URL
-  if (fill) {
-    return (
-      <Image
-        src={imageSrc}
-        alt={alt}
-        fill
-        className={className}
-        onLoad={handleImageLoad}
-        onError={handleImageError}
-        priority={priority}
-        sizes={sizes}
-      />
-    );
-  }
-
-  return (
+  const imageElement = fill ? (
+    <Image
+      src={imageSrc}
+      alt={alt}
+      fill
+      className={className}
+      onLoad={handleImageLoad}
+      onError={handleImageError}
+      priority={priority}
+      sizes={sizes}
+    />
+  ) : (
     <Image
       src={imageSrc}
       alt={alt}
@@ -168,6 +181,44 @@ export default function ProtectedImage({
       sizes={sizes}
     />
   );
+
+  // Wrap with quality indicator if not premium quality
+  if (!isPremiumQuality) {
+    return (
+      <div className="relative">
+        {imageElement}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="absolute top-2 right-2">
+                <Badge
+                  variant="secondary"
+                  className="text-xs bg-orange-100 text-orange-800 cursor-help"
+                >
+                  <Info className="w-3 h-3 mr-1" />
+                  Preview Quality
+                </Badge>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <div className="text-center">
+                <p className="font-medium">Preview Quality</p>
+                <p className="text-sm text-gray-600">
+                  Upgrade to premium for full quality
+                </p>
+                <div className="flex items-center gap-1 mt-1 text-xs text-yellow-600">
+                  <Crown className="w-3 h-3" />
+                  <span>Premium: Full Resolution</span>
+                </div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    );
+  }
+
+  return imageElement;
 }
 
 // Hook for preloading protected images
@@ -185,7 +236,11 @@ export function useProtectedImage(src: string) {
         setError(null);
 
         // If it's already a blob URL or external URL, use it directly
-        if (src.startsWith("blob:") || src.startsWith("http://") || src.startsWith("https://")) {
+        if (
+          src.startsWith("blob:") ||
+          src.startsWith("http://") ||
+          src.startsWith("https://")
+        ) {
           if (!isCancelled) {
             setImageUrl(src);
             setLoading(false);

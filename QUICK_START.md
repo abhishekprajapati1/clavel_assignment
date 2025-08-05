@@ -42,22 +42,19 @@
 
 ## First Steps
 
-1. **Create an Admin Account:**
-   - Go to http://localhost:3000/auth/signup
-   - Create an account with any email
-   - Check the console for verification email (in development mode)
-
+1. **Admin Account:**
+   - When backend server starts, it creates an admin account with email `admin@templater.com` and password `Admin@123`.
+   - For regular users, they need to create an account at http://localhost:3000/signup and then proceed to verify their email.
 2. **Verify Email:**
-   - The verification link will be printed in the backend console
-   - Copy and paste it in your browser
+   - The verification link will be sent to the registered email address.
+   - Open your email client and click on the verification link.
 
 3. **Sign In:**
-   - Go to http://localhost:3000/auth/signin
+   - Go to http://localhost:3000/signin
    - Sign in with your credentials
 
 4. **Access Admin Panel:**
-   - You'll be redirected to the admin dashboard
-   - Upload some templates
+   - You'll be redirected to the admin dashboard ( if you are logged in as admin user. Else to the templates explore page.)
 
 5. **Test User Experience:**
    - Create a regular user account
@@ -73,7 +70,6 @@ The screenshot protection can be tested by:
 3. **Press Ctrl+Shift+I** to open developer tools
 4. **Press PrintScreen** key
 5. **Try to drag** images
-6. **Try to select** text
 
 All these actions will trigger the payment redirect.
 

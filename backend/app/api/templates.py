@@ -28,8 +28,11 @@ async def serve_protected_file(
     current_user: UserDetailsResponse = Depends(get_current_user),
     db: AsyncIOMotorClient = Depends(get_database)
 ):
-    """Serve uploaded files with authentication protection"""
+    """Serve uploaded files with quality based on user's premium status"""
     import mimetypes
+    import tempfile
+    from PIL import Image, ImageFilter
+    import io
 
     # Prevent directory traversal attacks
     if ".." in filename or "/" in filename or "\\" in filename or filename.startswith("."):
@@ -66,6 +69,12 @@ async def serve_protected_file(
             detail="File not found"
         )
 
+    # Check user's premium status
+    user_collection = db.templater.users
+    user_doc = await user_collection.find_one({"_id": ObjectId(current_user.id)})
+
+    is_premium = user_doc and user_doc.get("is_premium", False)
+
     # Determine media type
     media_type, _ = mimetypes.guess_type(filename)
     if not media_type:
@@ -77,17 +86,98 @@ async def serve_protected_file(
         else:
             media_type = "application/octet-stream"
 
-    # Return the file with proper headers
-    return FileResponse(
-        path=file_path,
-        filename=filename,
-        media_type=media_type,
-        headers={
-            "Cache-Control": "private, max-age=3600",  # Cache for 1 hour
-            "X-Content-Type-Options": "nosniff",
-            "X-Frame-Options": "DENY"
-        }
-    )
+    # For premium users, serve original file
+    if is_premium:
+        return FileResponse(
+            path=file_path,
+            filename=filename,
+            media_type=media_type,
+            headers={
+                "Cache-Control": "private, max-age=3600",
+                "X-Content-Type-Options": "nosniff",
+                "X-Frame-Options": "DENY",
+                "X-Premium-Quality": "true"
+            }
+        )
+
+    # For free users, serve degraded quality image
+    try:
+        # Check if it's an image file
+        if not filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+            # For non-image files, just serve normally (shouldn't happen in template context)
+            return FileResponse(
+                path=file_path,
+                filename=filename,
+                media_type=media_type,
+                headers={
+                    "Cache-Control": "private, max-age=1800",
+                    "X-Content-Type-Options": "nosniff",
+                    "X-Frame-Options": "DENY",
+                    "X-Premium-Quality": "false"
+                }
+            )
+
+        # Open and process the image
+        with Image.open(file_path) as img:
+            # Convert to RGB if necessary
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+
+            # Create degraded version for free users
+            # 1. Reduce quality significantly
+            # 2. Add blur effect
+            # 3. Reduce resolution
+
+            # Resize to 70% of original size
+            original_size = img.size
+            new_size = (int(original_size[0] * 0.7), int(original_size[1] * 0.7))
+            img_degraded = img.resize(new_size, Image.Resampling.LANCZOS)
+
+            # Apply blur effect
+            img_degraded = img_degraded.filter(ImageFilter.GaussianBlur(radius=1.5))
+
+            # Save to bytes with reduced quality
+            img_bytes = io.BytesIO()
+
+            # Determine format for saving
+            if filename.lower().endswith('.png'):
+                # For PNG, we'll convert to JPEG with low quality to reduce file size
+                img_degraded.save(img_bytes, format='JPEG', quality=60, optimize=True)
+                media_type = "image/jpeg"
+            else:
+                # For JPEG and other formats
+                img_degraded.save(img_bytes, format='JPEG', quality=60, optimize=True)
+                media_type = "image/jpeg"
+
+            img_bytes.seek(0)
+
+            # Return degraded image
+            return Response(
+                content=img_bytes.getvalue(),
+                media_type=media_type,
+                headers={
+                    "Cache-Control": "private, max-age=1800",  # Shorter cache for free users
+                    "X-Content-Type-Options": "nosniff",
+                    "X-Frame-Options": "DENY",
+                    "X-Premium-Quality": "false",
+                    "Content-Disposition": f"inline; filename={filename}"
+                }
+            )
+
+    except Exception as e:
+        logger.error(f"Error processing image {filename}: {str(e)}")
+        # If image processing fails, return original file
+        return FileResponse(
+            path=file_path,
+            filename=filename,
+            media_type=media_type,
+            headers={
+                "Cache-Control": "private, max-age=1800",
+                "X-Content-Type-Options": "nosniff",
+                "X-Frame-Options": "DENY",
+                "X-Premium-Quality": "false"
+            }
+        )
 
 @templates_router.get("/", response_model=TemplateListResponse)
 async def get_templates(
