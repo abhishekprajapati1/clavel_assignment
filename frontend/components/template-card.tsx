@@ -216,11 +216,7 @@ export default function TemplateCard({
               fill
               className={`object-cover transition-all duration-200 ${
                 imageLoading ? "opacity-0" : "opacity-100"
-              } ${
-                !hasPremiumAccess && enableScreenshotProtection
-                  ? "group-hover:scale-105 filter blur-[0.5px]"
-                  : "group-hover:scale-105"
-              }`}
+              } group-hover:scale-105`}
               onLoad={handleImageLoad}
               onError={handleImageError}
             />
@@ -334,11 +330,7 @@ export default function TemplateCard({
                   src={getImageUrl()}
                   alt={template.title}
                   fill
-                  className={`object-contain ${
-                    !hasPremiumAccess && enableScreenshotProtection
-                      ? "filter blur-[1px]"
-                      : ""
-                  }`}
+                  className="object-contain"
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-gray-400">

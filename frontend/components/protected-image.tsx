@@ -48,6 +48,7 @@ export default function ProtectedImage({
 
     const fetchImage = async () => {
       try {
+        console.log("🖼️ ProtectedImage: Starting to fetch image:", src);
         setLoading(true);
         setError(false);
 
@@ -57,12 +58,18 @@ export default function ProtectedImage({
           src.startsWith("http://") ||
           src.startsWith("https://")
         ) {
+          console.log("🖼️ ProtectedImage: Using direct URL:", src);
           if (!isCancelled) {
             setImageSrc(src);
             setLoading(false);
           }
           return;
         }
+
+        console.log(
+          "🖼️ ProtectedImage: Fetching protected image from API:",
+          src,
+        );
 
         // Fetch the protected image
         const response = await api.get(src, {
@@ -72,15 +79,30 @@ export default function ProtectedImage({
           },
         });
 
+        console.log("🖼️ ProtectedImage: Response received:", {
+          status: response.status,
+          headers: response.headers,
+          dataSize: response.data?.size || "unknown",
+        });
+
         if (!isCancelled) {
           // Check image quality from response headers
           const premiumQuality =
             response.headers["x-premium-quality"] === "true";
           setIsPremiumQuality(premiumQuality);
 
+          console.log("🖼️ ProtectedImage: Premium quality:", premiumQuality);
+
           // Create blob URL
           const blob = new Blob([response.data]);
           const blobUrl = URL.createObjectURL(blob);
+
+          console.log(
+            "🖼️ ProtectedImage: Created blob URL:",
+            blobUrl,
+            "Blob size:",
+            blob.size,
+          );
 
           // Clean up previous blob URL
           if (blobUrlRef.current) {
@@ -90,9 +112,17 @@ export default function ProtectedImage({
           blobUrlRef.current = blobUrl;
           setImageSrc(blobUrl);
           setLoading(false);
+
+          console.log("🖼️ ProtectedImage: Image source set successfully");
         }
       } catch (err) {
-        console.error("Failed to fetch protected image:", err);
+        console.error("🚨 ProtectedImage: Failed to fetch protected image:", {
+          src,
+          error: err,
+          message: err?.message,
+          status: err?.response?.status,
+          statusText: err?.response?.statusText,
+        });
         if (!isCancelled) {
           setError(true);
           setLoading(false);
@@ -123,17 +153,20 @@ export default function ProtectedImage({
   }, []);
 
   const handleImageLoad = () => {
+    console.log("✅ ProtectedImage: Image loaded successfully:", src);
     setLoading(false);
     onLoad?.();
   };
 
   const handleImageError = () => {
+    console.error("❌ ProtectedImage: Image failed to load:", src);
     setError(true);
     setLoading(false);
     onError?.();
   };
 
   if (error) {
+    console.log("🖼️ ProtectedImage: Rendering error state for:", src);
     return (
       <div
         className={`flex flex-col items-center justify-center bg-gray-100 text-gray-400 ${className}`}
@@ -141,20 +174,34 @@ export default function ProtectedImage({
       >
         <AlertTriangle className="w-8 h-8 mb-2" />
         <span className="text-sm">Failed to load image</span>
+        <span className="text-xs mt-1 text-center px-2">{src}</span>
       </div>
     );
   }
 
   if (loading || !imageSrc) {
+    console.log("🖼️ ProtectedImage: Rendering loading state:", {
+      loading,
+      imageSrc: !!imageSrc,
+      src,
+    });
     return (
       <div
-        className={`flex items-center justify-center bg-gray-100 ${className}`}
+        className={`flex flex-col items-center justify-center bg-gray-100 ${className}`}
         style={fill ? undefined : { width, height }}
       >
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span className="text-xs mt-2 text-gray-500">Loading...</span>
       </div>
     );
   }
+
+  console.log("🖼️ ProtectedImage: Rendering image element:", {
+    imageSrc,
+    fill,
+    width,
+    height,
+  });
 
   // Use Next.js Image component with the blob URL
   const imageElement = fill ? (
@@ -167,6 +214,7 @@ export default function ProtectedImage({
       onError={handleImageError}
       priority={priority}
       sizes={sizes}
+      unoptimized={imageSrc.startsWith("blob:")}
     />
   ) : (
     <Image
@@ -179,13 +227,14 @@ export default function ProtectedImage({
       onError={handleImageError}
       priority={priority}
       sizes={sizes}
+      unoptimized={imageSrc.startsWith("blob:")}
     />
   );
 
   // Wrap with quality indicator if not premium quality
   if (!isPremiumQuality) {
     return (
-      <div className="relative">
+      <div className="relative size-full">
         {imageElement}
         <TooltipProvider>
           <Tooltip>
