@@ -50,64 +50,8 @@ A comprehensive full-stack web application built with Next.js (frontend) and Fas
 - MongoDB instance
 - Git
 
-### Backend Setup
-
-1. **Navigate to backend directory:**
-   ```bash
-   cd backend
-   ```
-
-2. **Create virtual environment:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Set environment variables:**
-   Create a `.env` file in the backend directory:
-   ```env
-   MONGODB_URL=your-mongodb-url
-   JWT_SECRET_KEY=your-super-secret-jwt-key
-   JWT_REFRESH_SECRET_KEY=your-super-secret-refresh-key
-   EMAIL_HOST=smtp.gmail.com
-   EMAIL_PORT=587
-   EMAIL_USER=your-email@gmail.com
-   EMAIL_PASSWORD=your-app-password
-   FRONTEND_URL=http://localhost:3000
-   ```
-
-5. **Run the backend:**
-   ```bash
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-   ```
-
-### Frontend Setup
-
-1. **Navigate to frontend directory:**
-   ```bash
-   cd frontend
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Set environment variables:**
-   Create a `.env.local` file in the frontend directory:
-   ```env
-   NEXT_PUBLIC_API_URL=http://localhost:8000
-   ```
-
-4. **Run the frontend:**
-   ```bash
-   npm run dev
-   ```
+### Setup
+- Please refer to QUICK_START.md to setup your environment.
 
 ## 🧪 Testing Screenshot Protection
 
