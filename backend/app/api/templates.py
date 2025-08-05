@@ -22,6 +22,73 @@ logger = logging.getLogger(__name__)
 
 templates_router = APIRouter()
 
+@templates_router.get("/uploads/{filename}")
+async def serve_protected_file(
+    filename: str,
+    current_user: UserDetailsResponse = Depends(get_current_user),
+    db: AsyncIOMotorClient = Depends(get_database)
+):
+    """Serve uploaded files with authentication protection"""
+    import mimetypes
+
+    # Prevent directory traversal attacks
+    if ".." in filename or "/" in filename or "\\" in filename or filename.startswith("."):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="File not found"
+        )
+
+    # Validate filename format (only allow alphanumeric, dash, underscore, and dot)
+    import re
+    if not re.match(r'^[a-zA-Z0-9._-]+$', filename):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="File not found"
+        )
+
+    # Check if this file belongs to a template (security layer)
+    template_service = TemplateService(db)
+    template_exists = await template_service.check_template_file_exists(filename)
+
+    if not template_exists:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="File not found"
+        )
+
+    # Construct file path
+    file_path = os.path.join("uploads", filename)
+
+    # Check if file exists
+    if not os.path.exists(file_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="File not found"
+        )
+
+    # Determine media type
+    media_type, _ = mimetypes.guess_type(filename)
+    if not media_type:
+        # Default to image types for unknown extensions
+        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+            media_type = f"image/{filename.split('.')[-1].lower()}"
+            if media_type == "image/jpg":
+                media_type = "image/jpeg"
+        else:
+            media_type = "application/octet-stream"
+
+    # Return the file with proper headers
+    return FileResponse(
+        path=file_path,
+        filename=filename,
+        media_type=media_type,
+        headers={
+            "Cache-Control": "private, max-age=3600",  # Cache for 1 hour
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY"
+        }
+    )
+
 @templates_router.get("/", response_model=TemplateListResponse)
 async def get_templates(
     page: int = Query(1, ge=1, description="Page number"),

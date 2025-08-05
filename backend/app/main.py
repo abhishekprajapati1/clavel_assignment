@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+
 import os
 from dotenv import load_dotenv
 
@@ -38,9 +38,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files for uploaded templates
+# Create uploads directory
 os.makedirs("uploads", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Include routers
 app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])

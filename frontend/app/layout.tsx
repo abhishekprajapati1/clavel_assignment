@@ -5,6 +5,7 @@ import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/layout/navbar";
 import { Toaster } from "react-hot-toast";
 import { ConditionalMain } from "@/components/layout/conditional-main";
+import DevToolsProtection from "@/components/dev-tools-protection";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
+          <DevToolsProtection />
           <Navbar />
           <ConditionalMain>{children}</ConditionalMain>
           <Toaster

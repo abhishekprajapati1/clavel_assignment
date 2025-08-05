@@ -31,6 +31,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import { CreateTemplateModal } from "@/features/admin/components/CreateTemplateModal";
 import TemplateCard from "@/components/template-card";
+import ProtectedImage from "@/components/protected-image";
 import {
   FileImage,
   Search,
@@ -229,11 +230,11 @@ export default function TemplatesPage() {
         {filteredAndSortedTemplates?.map((template) => (
           <Card key={template.id} className="overflow-hidden">
             <div className="aspect-video bg-gray-100 relative">
-              <img
-                src={`${process.env.NEXT_PUBLIC_API_URL}${template.image_url}`}
+              <ProtectedImage
+                src={`/api/templates/uploads/${template.image_url.split("/").pop()}`}
                 alt={template.title}
-                className="w-full h-full object-cover"
-                draggable={false}
+                fill
+                className="object-cover"
               />
             </div>
             <CardHeader>

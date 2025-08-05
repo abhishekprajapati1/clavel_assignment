@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import ProtectedImage from "./protected-image";
 import {
   Card,
   CardContent,
@@ -73,6 +73,7 @@ export default function TemplateCard({
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const lastToastRef = useRef<number>(0);
 
   const handleTemplateClick = () => {
     if (onTemplateClick) {
@@ -95,6 +96,25 @@ export default function TemplateCard({
     setIsPreviewOpen(true);
   };
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    // Prevent right-click for non-premium users
+    if (!hasPremiumAccess && enableScreenshotProtection) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Debounce toast messages (prevent multiple toasts within 2 seconds)
+      const now = Date.now();
+      if (now - lastToastRef.current > 2000) {
+        toast.error(
+          "Right-click disabled. Upgrade to premium for full access.",
+        );
+        lastToastRef.current = now;
+      }
+
+      return false;
+    }
+  };
+
   const handleImageLoad = () => {
     setImageLoading(false);
   };
@@ -108,7 +128,9 @@ export default function TemplateCard({
     if (template.image_url.startsWith("http")) {
       return template.image_url;
     }
-    return `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${template.image_url}`;
+    // Use protected file serving route - return just the API path
+    const filename = template.image_url.split("/").pop(); // Extract filename from path
+    return `/api/templates/uploads/${filename}`;
   };
 
   const getPremiumIndicator = () => {
@@ -149,6 +171,9 @@ export default function TemplateCard({
           : "hover:border-blue-300"
       }`}
       onClick={handleTemplateClick}
+      onContextMenu={handleContextMenu}
+      data-allow-context-menu={hasPremiumAccess ? "true" : undefined}
+      data-template-card="true"
     >
       <CardHeader className="p-4">
         <div className="flex items-start justify-between gap-2">
@@ -168,7 +193,11 @@ export default function TemplateCard({
 
       <CardContent className="p-4 pt-0">
         {/* Template Image */}
-        <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4">
+        <div
+          className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 mb-4"
+          onContextMenu={handleContextMenu}
+          data-allow-context-menu={hasPremiumAccess ? "true" : undefined}
+        >
           {imageLoading && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -181,7 +210,7 @@ export default function TemplateCard({
               <span className="text-sm">Failed to load image</span>
             </div>
           ) : (
-            <Image
+            <ProtectedImage
               src={getImageUrl()}
               alt={template.title}
               fill
@@ -296,9 +325,12 @@ export default function TemplateCard({
           </DialogHeader>
 
           <div className="relative">
-            <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+            <div
+              className="relative aspect-video rounded-lg overflow-hidden bg-gray-100"
+              data-allow-context-menu={hasPremiumAccess ? "true" : undefined}
+            >
               {!imageError ? (
-                <Image
+                <ProtectedImage
                   src={getImageUrl()}
                   alt={template.title}
                   fill

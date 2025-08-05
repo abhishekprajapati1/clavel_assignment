@@ -224,3 +224,11 @@ class TemplateService:
             per_page=limit,
             total_pages=total_pages
         )
+
+    async def check_template_file_exists(self, filename: str) -> bool:
+        """Check if a file belongs to an existing template"""
+        # Look for templates that have this filename in their image_url
+        template = await self.templates_collection.find_one({
+            "image_url": {"$regex": f".*{filename}$"}
+        })
+        return template is not None
