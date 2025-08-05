@@ -32,7 +32,7 @@ import {
 import { toast } from "react-hot-toast";
 import { formatDate } from "@/lib/utils";
 import PremiumDownloadButton from "./premium-download-button";
-import ScreenshotProtection, { usePremiumAccess } from "./screenshot-protection";
+import { usePremiumAccess } from "./screenshot-protection";
 
 interface Template {
   id: string;
@@ -67,7 +67,8 @@ export default function TemplateCard({
   onTemplateClick,
 }: TemplateCardProps) {
   const router = useRouter();
-  const { user, hasPremiumAccess, canDownload, canScreenshot } = usePremiumAccess();
+  const { user, hasPremiumAccess, canDownload, canScreenshot } =
+    usePremiumAccess();
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
@@ -90,11 +91,7 @@ export default function TemplateCard({
       return;
     }
 
-    if (!canScreenshot && enableScreenshotProtection) {
-      setShowUpgradeDialog(true);
-      return;
-    }
-
+    // Always allow preview, but it will be blurred for non-premium users
     setIsPreviewOpen(true);
   };
 
@@ -108,10 +105,10 @@ export default function TemplateCard({
   };
 
   const getImageUrl = () => {
-    if (template.image_url.startsWith('http')) {
+    if (template.image_url.startsWith("http")) {
       return template.image_url;
     }
-    return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${template.image_url}`;
+    return `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${template.image_url}`;
   };
 
   const getPremiumIndicator = () => {
@@ -134,7 +131,10 @@ export default function TemplateCard({
     }
 
     return (
-      <Badge variant="destructive" className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1">
+      <Badge
+        variant="destructive"
+        className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1"
+      >
         <Lock className="w-3 h-3" />
         Premium Required
       </Badge>
@@ -145,8 +145,8 @@ export default function TemplateCard({
     <Card
       className={`group hover:shadow-lg transition-all duration-200 cursor-pointer ${className} ${
         !hasPremiumAccess && enableScreenshotProtection
-          ? 'border-orange-200 hover:border-orange-300'
-          : 'hover:border-blue-300'
+          ? "border-orange-200 hover:border-orange-300"
+          : "hover:border-blue-300"
       }`}
       onClick={handleTemplateClick}
     >
@@ -186,24 +186,26 @@ export default function TemplateCard({
               alt={template.title}
               fill
               className={`object-cover transition-all duration-200 ${
-                imageLoading ? 'opacity-0' : 'opacity-100'
+                imageLoading ? "opacity-0" : "opacity-100"
               } ${
                 !hasPremiumAccess && enableScreenshotProtection
-                  ? 'group-hover:scale-105 filter blur-[1px] group-hover:blur-none'
-                  : 'group-hover:scale-105'
+                  ? "group-hover:scale-105 filter blur-[2px]"
+                  : "group-hover:scale-105"
               }`}
               onLoad={handleImageLoad}
               onError={handleImageError}
             />
           )}
 
-          {/* Premium Overlay */}
+          {/* Premium Badge for Free Users */}
           {!hasPremiumAccess && enableScreenshotProtection && (
-            <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              <div className="bg-white rounded-lg p-3 text-center">
-                <Crown className="w-6 h-6 text-yellow-500 mx-auto mb-1" />
-                <p className="text-xs font-medium">Premium Required</p>
-              </div>
+            <div className="absolute top-2 right-2">
+              <Badge
+                variant="secondary"
+                className="text-xs bg-orange-100 text-orange-800"
+              >
+                Premium
+              </Badge>
             </div>
           )}
         </div>
@@ -252,13 +254,17 @@ export default function TemplateCard({
           {user && (
             <div className="text-xs text-gray-500 flex items-center justify-between pt-2 border-t">
               <div className="flex items-center gap-3">
-                <span className={`flex items-center gap-1 ${canDownload ? 'text-green-600' : 'text-red-500'}`}>
+                <span
+                  className={`flex items-center gap-1 ${canDownload ? "text-green-600" : "text-red-500"}`}
+                >
                   <Download className="w-3 h-3" />
-                  {canDownload ? 'Can Download' : 'No Download'}
+                  {canDownload ? "Can Download" : "No Download"}
                 </span>
-                <span className={`flex items-center gap-1 ${canScreenshot ? 'text-green-600' : 'text-red-500'}`}>
+                <span
+                  className={`flex items-center gap-1 ${canScreenshot ? "text-green-600" : "text-red-500"}`}
+                >
                   <Camera className="w-3 h-3" />
-                  {canScreenshot ? 'Can Screenshot' : 'No Screenshot'}
+                  {canScreenshot ? "Can Screenshot" : "No Screenshot"}
                 </span>
               </div>
             </div>
@@ -270,17 +276,7 @@ export default function TemplateCard({
 
   return (
     <>
-      {enableScreenshotProtection ? (
-        <ScreenshotProtection
-          templateId={template.id}
-          enforceProtection={!hasPremiumAccess}
-          showUpgradePrompt={true}
-        >
-          {cardContent}
-        </ScreenshotProtection>
-      ) : (
-        cardContent
-      )}
+      {cardContent}
 
       {/* Template Preview Dialog */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
@@ -300,47 +296,47 @@ export default function TemplateCard({
           </DialogHeader>
 
           <div className="relative">
-            {enableScreenshotProtection && !hasPremiumAccess && (
-              <ScreenshotProtection
-                templateId={template.id}
-                enforceProtection={true}
-                showUpgradePrompt={true}
-              >
-                <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
-                  {!imageError ? (
-                    <Image
-                      src={getImageUrl()}
-                      alt={template.title}
-                      fill
-                      className="object-contain"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                      <AlertTriangle className="w-12 h-12 mb-2" />
-                      <span>Failed to load template image</span>
-                    </div>
-                  )}
+            <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+              {!imageError ? (
+                <Image
+                  src={getImageUrl()}
+                  alt={template.title}
+                  fill
+                  className={`object-contain ${
+                    !hasPremiumAccess && enableScreenshotProtection
+                      ? "filter blur-[3px]"
+                      : ""
+                  }`}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                  <AlertTriangle className="w-12 h-12 mb-2" />
+                  <span>Failed to load template image</span>
                 </div>
-              </ScreenshotProtection>
-            )}
+              )}
 
-            {(!enableScreenshotProtection || hasPremiumAccess) && (
-              <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
-                {!imageError ? (
-                  <Image
-                    src={getImageUrl()}
-                    alt={template.title}
-                    fill
-                    className="object-contain"
-                  />
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                    <AlertTriangle className="w-12 h-12 mb-2" />
-                    <span>Failed to load template image</span>
+              {/* Premium overlay for preview */}
+              {!hasPremiumAccess && enableScreenshotProtection && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-10">
+                  <div className="bg-white rounded-lg p-4 text-center shadow-lg">
+                    <Crown className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
+                    <p className="text-sm font-medium mb-2">Premium Preview</p>
+                    <p className="text-xs text-gray-600 mb-3">
+                      Upgrade to see full quality
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setIsPreviewOpen(false);
+                        router.push("/payment");
+                      }}
+                    >
+                      Upgrade Now
+                    </Button>
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center justify-between pt-4">
@@ -350,10 +346,7 @@ export default function TemplateCard({
             </div>
 
             <div className="flex gap-2">
-              <Button
-                onClick={() => setIsPreviewOpen(false)}
-                variant="outline"
-              >
+              <Button onClick={() => setIsPreviewOpen(false)} variant="outline">
                 Close
               </Button>
               <PremiumDownloadButton
@@ -361,73 +354,6 @@ export default function TemplateCard({
                 templateTitle={template.title}
                 showTooltip={false}
               />
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Upgrade Dialog */}
-      <Dialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <div className="flex items-center gap-2 mb-2">
-              <Crown className="w-6 h-6 text-yellow-500" />
-              <DialogTitle>Premium Access Required</DialogTitle>
-            </div>
-            <DialogDescription>
-              Upgrade to premium to preview and download templates
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="bg-gradient-to-r from-blue-50 to-green-50 p-4 rounded-lg border">
-              <h4 className="font-semibold text-gray-800 mb-2">
-                Premium Features:
-              </h4>
-              <div className="space-y-1 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Eye className="w-4 h-4 text-blue-600" />
-                  <span>Full template previews</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Download className="w-4 h-4 text-green-600" />
-                  <span>Unlimited downloads</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Camera className="w-4 h-4 text-purple-600" />
-                  <span>Screenshot access</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Crown className="w-4 h-4 text-yellow-600" />
-                  <span>Priority support</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <p className="text-2xl font-bold text-green-600 mb-1">$9.99</p>
-              <p className="text-sm text-gray-600">One-time payment</p>
-            </div>
-
-            <div className="space-y-2">
-              <Button
-                onClick={() => {
-                  setShowUpgradeDialog(false);
-                  router.push("/payment");
-                }}
-                className="w-full"
-                size="lg"
-              >
-                <Crown className="w-4 h-4 mr-2" />
-                Upgrade to Premium
-              </Button>
-              <Button
-                onClick={() => setShowUpgradeDialog(false)}
-                variant="outline"
-                className="w-full"
-              >
-                Maybe Later
-              </Button>
             </div>
           </div>
         </DialogContent>
@@ -452,7 +378,9 @@ export function TemplateGrid({
 }) {
   if (loading) {
     return (
-      <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ${className}`}>
+      <div
+        className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ${className}`}
+      >
         {Array.from({ length: 8 }).map((_, i) => (
           <Card key={i} className="animate-pulse">
             <CardHeader>
@@ -489,7 +417,9 @@ export function TemplateGrid({
   }
 
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ${className}`}>
+    <div
+      className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ${className}`}
+    >
       {templates.map((template) => (
         <TemplateCard
           key={template.id}

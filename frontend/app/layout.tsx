@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/layout/navbar";
 import { Toaster } from "react-hot-toast";
+import { ConditionalMain } from "@/components/layout/conditional-main";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +34,7 @@ export default function RootLayout({
       >
         <Providers>
           <Navbar />
-          <main className="pt-16">{children}</main>
+          <ConditionalMain>{children}</ConditionalMain>
           <Toaster
             position="top-right"
             toastOptions={{
